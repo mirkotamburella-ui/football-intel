@@ -151,7 +151,8 @@ così la scelta è letta nel contesto della sua lega.
 Punteggio finale = base − penalità Contrarian (max 10; divari modello/mercato ≥ 15 pp pesano 4 punti). **Un punteggio alto non è una garanzia di vincita.**
 
 ### Controllo qualità (una selezione entra in multipla solo se supera TUTTO)
-quota con fonte e timestamp e aggiornata da ≤ 90 min · bookmaker preferito · partita verificata, pre-match e
+partita confermata da 2 fonti indipendenti quando una seconda fonte è configurata (`FIXTURE_CONFIRMATION`; senza
+chiavi API ogni partita è marcata "Solo ESPN: controlla il palinsesto") · quota con fonte e timestamp e aggiornata da ≤ 90 min · bookmaker preferito · partita verificata, pre-match e
 a ≥ 10 min dal via · modello statistico disponibile (niente scelte "a intuito") · ≥ 5 partite di campionato
 per squadra · qualità dati ≥ 0,55 · campionato non tier 3 · punteggio ≥ 60 · EV ≥ 0 · quota ≥ 1,20 · p ≥ 35% ·
 quota ≤ 3,50 · niente pareggio secco · modelli non in forte disaccordo · una sola selezione per partita · per campionato massimo 2 selezioni, fino a 4 se con punteggio ≥ 68 (`MAX_PER_LEAGUE`, `MAX_PER_LEAGUE_HARD`, `LEAGUE_EXTRA_MIN_SCORE`).
@@ -228,7 +229,7 @@ data/logs/fbi.log                     log con rotazione
 ```bash
 python -m unittest discover -s tests -t .
 ```
-35 test: matematica (de-vig, Poisson, GLM, Elo, Monte Carlo, copula), regole (budget ≤ 10 €, settlement di
+38 test: matematica (de-vig, Poisson, GLM, Elo, Monte Carlo, copula), regole (budget ≤ 10 €, settlement di
 tutti i mercati, QC, multiple 5–10 senza doppioni, correlazioni), parser su payload reali, provider a chiave
 con risposte simulate, e un **test end-to-end offline** in cui i 12 agenti girano su risposte reali ESPN
 catturate l'8/11/2026 (`tests/fixtures/e2e`, ridotte con `scripts/build_test_fixture.py`).

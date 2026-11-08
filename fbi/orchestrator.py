@@ -44,6 +44,7 @@ DISCLAIMER = [
     "Analisi statistica a scopo informativo e di simulazione: il sistema non piazza scommesse e non è collegato a operatori.",
     "Le probabilità sono stime con incertezza: è possibile perdere l'intera puntata. Nessuna strategia garantisce vincite.",
     "Budget massimo di riferimento 10 €. Non aumentare la puntata dopo una perdita e non inseguire le perdite (niente raddoppi/martingala).",
+    "Prima di considerare una selezione, verifica che la partita sia davvero nel palinsesto del tuo bookmaker: le fonti dati possono non riflettere rinvii o eventi non offerti in Italia.",
     "Gioca solo presso operatori autorizzati ADM, se maggiorenne. Se il gioco smette di essere un divertimento: Telefono Verde Nazionale 800 558822 (ISS).",
 ]
 

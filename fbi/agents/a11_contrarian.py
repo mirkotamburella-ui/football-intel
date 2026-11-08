@@ -106,7 +106,14 @@ def challenge(c: dict, eid: str, a: dict) -> list[dict]:
         obj(1.5, "Campione statistico ridotto (< 8 partite per una delle squadre)", {"sample": smp, "agent": "A08"})
     if c.get("books_disagreement_pp") and c["books_disagreement_pp"] >= 4:
         obj(1.0, f"I bookmaker non concordano ({c['books_disagreement_pp']} punti percentuali di differenza)", {"agent": "A07"})
-    # 9. quota sopravvalutata?
+    # 9. partita confermata solo da ESPN
+    ver = (a.get("A10") or {}).get("matches", {}).get(eid, {}).get("fixture_verification") if "A10" in a else None
+    if not ver:
+        sources = 1 + bool((a["A07"]["matches"].get(eid) or {}).get("odds_api_matched")) + bool(lin.get("api_football_fixture"))
+        if sources < 2:
+            obj(1.5, "Partita confermata da una sola fonte (ESPN): potrebbe essere rinviata o non offerta dal tuo bookmaker",
+                {"agent": "A01/A07"})
+    # 10. quota sopravvalutata?
     if not c["value"]:
         obj(1.0, f"EV stimato negativo ({c['ev']:+.1%}): la quota non compensa la probabilità", {"ev": c["ev"], "agent": "A09"})
     return objs

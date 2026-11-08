@@ -67,6 +67,9 @@ class Settings:
     preferred_bookmakers: list[str] = field(default_factory=lambda: list(DEFAULT_BOOKMAKERS))
     # se True, una quota è "giocabile" solo se offerta da un bookmaker preferito
     require_preferred_bookmaker: bool = True
+    # verifica partite: "auto" = obbligatoria la conferma da 2 fonti indipendenti quando una
+    # seconda fonte (The Odds API / API-Football) è configurata; "always" = sempre; "never" = mai
+    fixture_confirmation: str = "auto"
     max_matches: int = 0  # 0 = nessun limite
 
     # --- soglie di qualità (Quality Control) ---
@@ -149,6 +152,7 @@ def get_settings(load_env_file: bool = True) -> Settings:
         timezone=_s("TIMEZONE", "Europe/Rome"),
         preferred_bookmakers=[b.strip().lower() for b in _s("PREFERRED_BOOKMAKERS", ",".join(DEFAULT_BOOKMAKERS)).split(",") if b.strip()],
         require_preferred_bookmaker=_s("REQUIRE_PREFERRED_BOOKMAKER", "true").lower() in ("1", "true", "yes", "si"),
+        fixture_confirmation=_s("FIXTURE_CONFIRMATION", "auto").lower(),
         max_matches=_i("MAX_MATCHES", 0),
         min_selection_score=_f("MIN_SELECTION_SCORE", 60.0),
         min_ev=_f("MIN_EV", 0.0),

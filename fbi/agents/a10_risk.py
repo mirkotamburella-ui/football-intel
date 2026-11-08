@@ -55,6 +55,26 @@ def data_quality(ctx, fx, a) -> tuple[float, dict, list[str]]:
     return round(dq, 3), {k: round(v, 2) for k, v in comp.items()}, notes
 
 
+def fixture_verification(ctx, eid: str, a: dict) -> dict:
+    """Fonti indipendenti che confermano l'esistenza e l'orario della partita."""
+    sources = ["ESPN (calendario)"]
+    if (a["A07"]["matches"].get(eid) or {}).get("odds_api_matched"):
+        sources.append("The Odds API (palinsesto bookmaker EU)")
+    if (a["A05"]["matches"].get(eid) or {}).get("api_football_fixture"):
+        sources.append("API-Football")
+    second_available = ctx.odds_api.enabled or ctx.api_football.enabled
+    mode = ctx.settings.fixture_confirmation
+    required = mode == "always" or (mode == "auto" and second_available)
+    confirmed = len(sources) >= 2
+    if confirmed:
+        note = f"confermata da {len(sources)} fonti indipendenti"
+    elif second_available:
+        note = "trovata solo su ESPN: non presente nel palinsesto dei bookmaker controllati"
+    else:
+        note = "verificata solo da ESPN: controlla che sia nel palinsesto del tuo bookmaker prima di considerarla"
+    return {"sources": sources, "confirmed": confirmed, "required": required, "note": note}
+
+
 class RiskManager(Agent):
     id = "A10"
     name = "Risk Manager"
@@ -98,8 +118,15 @@ class RiskManager(Agent):
                     level = min(2, level + 1)
                 sel.append({"key": c["key"], "risk_level": ["Basso", "Medio", "Alto"][level], "prob_interval_width": round(width, 3),
                             "allowed_in_accumulator": not reasons, "exclusion_reasons": reasons})
+            ver = fixture_verification(ctx, eid, inputs)
+            if ver["required"] and not ver["confirmed"]:
+                match_excl.append("partita non confermata da una seconda fonte indipendente (possibile rinvio o non in palinsesto)")
+                for x in sel:
+                    x["exclusion_reasons"].append(match_excl[-1])
+                    x["allowed_in_accumulator"] = False
             ko = parse_dt(fx["kickoff_utc"])
             out[eid] = {
+                "fixture_verification": ver,
                 "data_quality": dq, "data_quality_components": comp, "data_notes": notes, "league_tier": t,
                 "reliability_level": "Alta" if dq >= 0.8 else "Media" if dq >= 0.6 else "Bassa",
                 "match_exclusions": match_excl, "selections": sel,

@@ -28,6 +28,11 @@ function relPill(level) {
   const cls = level === "Alta" ? "ok" : level === "Media" ? "warn" : "bad";
   return `<span class="pill ${cls}">Affidabilità ${esc(level || "n.d.")}</span>`;
 }
+function verPill(v) {
+  if (!v) return "";
+  return v.confirmed ? `<span class="pill ok">Verificata (${v.sources.length} fonti)</span>`
+                     : `<span class="pill warn">Solo ESPN: controlla il palinsesto</span>`;
+}
 function riskPill(level) {
   const cls = level === "Basso" ? "ok" : level === "Medio" ? "warn" : "bad";
   return level ? `<span class="pill ${cls}">Rischio ${esc(level)}</span>` : "";
@@ -78,7 +83,7 @@ function selCard(s) {
     <div class="row" style="margin-top:8px"><span><b>${esc(s.label)}</b> @ <b class="num">${s.odds}</b> <span class="muted small">${esc(s.bookmaker)}</span></span>
       <span class="pill acc num">AI ${s.score.final}</span></div>
     <div class="row small" style="margin-top:6px"><span>Prob. stimata <b class="num">${pct(s.p_est)}</b> <span class="muted">(${pct(s.p_est_range_90[0])}–${pct(s.p_est_range_90[1])})</span></span><span class="num">EV ${sgn(s.ev)}</span></div>
-    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${status}${relPill(s.reliability_level)}${riskPill(s.risk_level)}</div>
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${status}${relPill(s.reliability_level)}${riskPill(s.risk_level)}${verPill(s.fixture_verification)}</div>
     ${!s.qc_passed ? `<div class="small muted" style="margin-top:6px">Motivo: ${esc(s.qc_failures.slice(0, 2).join("; "))}</div>` : ""}
   </div>`;
 }
@@ -137,7 +142,7 @@ function renderMatches(r) {
         <div class="muted small">${esc(c.competition)}</div>
         ${b ? `<div class="row small" style="margin-top:6px"><span>${c.recommended ? "Consigliata" : "Migliore (non conforme)"}: <b>${esc(b.label)}</b> @ ${b.odds}</span><span class="pill acc">AI ${b.score.final}</span></div>`
             : `<div class="small muted" style="margin-top:6px">Nessuna quota/modello disponibile</div>`}
-        <div style="margin-top:6px">${relPill(c.reliability_level)}</div></div>`;
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${relPill(c.reliability_level)}${verPill(c.fixture_verification)}</div></div>`;
     }).join("")}`;
   $("#q").addEventListener("input", (e) => { state.q = e.target.value.toLowerCase(); renderMatches(r); $("#q").focus(); });
 }
@@ -147,7 +152,8 @@ function matchDetail(eid, focusKey) {
   if (!c) return;
   const s = c.selections.find((x) => x.key === focusKey) || c.recommended || c.best_candidate;
   let html = `<h2 style="margin-top:0">${esc(c.match)}</h2><div class="muted small">${esc(c.competition)} · ${esc(c.kickoff_local)} (ora italiana)</div>
-    <div style="margin:8px 0">${relPill(c.reliability_level)} <span class="pill">qualità dati ${c.data_quality ?? "n.d."}</span></div>`;
+    <div style="margin:8px 0">${relPill(c.reliability_level)} <span class="pill">qualità dati ${c.data_quality ?? "n.d."}</span> ${verPill(c.fixture_verification)}</div>
+    ${c.fixture_verification ? `<p class="small muted">Verifica partita: ${esc(c.fixture_verification.note)} (fonti: ${esc(c.fixture_verification.sources.join(", "))}).</p>` : ""}`;
   if (c.data_notes.length) html += `<p class="small muted">${esc(c.data_notes.join(" · "))}</p>`;
   if (s) {
     html += `<div class="card"><div class="row"><span>Mercato: <b>${esc(s.label)}</b></span><span class="big num">${s.odds}</span></div>

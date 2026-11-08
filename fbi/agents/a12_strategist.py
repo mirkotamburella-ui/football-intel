@@ -71,6 +71,7 @@ class FinalBettingStrategist(Agent):
                     "risks": [o["objection"] for o in contra.get(c["key"], {}).get("objections", [])],
                     "qc_passed": not fails, "qc_failures": fails,
                     "correlation_tags": risk.get("correlation_tags"),
+                    "fixture_verification": risk.get("fixture_verification"),
                 }
                 sel["rationale"] = rationale(sel, inputs)
                 sels.append(sel)
@@ -86,6 +87,7 @@ class FinalBettingStrategist(Agent):
                 "candidates_count": len(sels), "qc_passed_count": sum(x["qc_passed"] for x in sels),
                 "reliability_level": risk.get("reliability_level"), "data_quality": risk.get("data_quality"),
                 "data_notes": risk.get("data_notes", []), "match_exclusions": risk.get("match_exclusions", []),
+                "fixture_verification": risk.get("fixture_verification"),
                 "selections": sels[:12],
             }
         eligible = [x for x in all_sel if x["qc_passed"]]

@@ -163,6 +163,30 @@ class QualityControl(unittest.TestCase):
         self.assertIn("campionato poco affidabile", risk)
 
 
+class FixtureVerification(unittest.TestCase):
+    def ctx(self, odds=False, mode="auto"):
+        st = Settings()
+        st.fixture_confirmation = mode
+        return SimpleNamespace(settings=st, odds_api=SimpleNamespace(enabled=odds), api_football=SimpleNamespace(enabled=False))
+
+    def inputs(self, matched):
+        return {"A07": {"matches": {"E1": {"odds_api_matched": matched}}}, "A05": {"matches": {"E1": {}}}}
+
+    def test_single_source_without_keys_is_flagged_not_blocked(self):
+        from fbi.agents.a10_risk import fixture_verification
+        v = fixture_verification(self.ctx(), "E1", self.inputs(False))
+        self.assertEqual((v["confirmed"], v["required"]), (False, False))
+        self.assertIn("palinsesto", v["note"])
+
+    def test_required_when_second_source_configured(self):
+        from fbi.agents.a10_risk import fixture_verification
+        v = fixture_verification(self.ctx(odds=True), "E1", self.inputs(False))
+        self.assertEqual((v["confirmed"], v["required"]), (False, True))
+        ok = fixture_verification(self.ctx(odds=True), "E1", self.inputs(True))
+        self.assertTrue(ok["confirmed"])
+        self.assertTrue(fixture_verification(self.ctx(mode="always"), "E1", self.inputs(False))["required"])
+
+
 class Parsers(unittest.TestCase):
     def test_odds_formats(self):
         self.assertAlmostEqual(frac_to_decimal("10/11"), 1.9091, places=3)

@@ -12,6 +12,13 @@ const store = {
 };
 
 async function getJSON(url) {
+  // versione statica (scripts/export_mobile.py): i dati sono incorporati nella pagina
+  const emb = window.FBI_EMBED;
+  if (emb) {
+    if (url === "/api/latest") return emb.report;
+    if (url === "/api/history") return emb.history;
+    throw new Error("disponibile solo con il server (python -m fbi serve)");
+  }
   const r = await fetch(url, { cache: "no-store" });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).hint || `HTTP ${r.status}`);
   return r.json();
@@ -236,6 +243,7 @@ async function load() {
     $("#meta").textContent = "Nessun report disponibile";
     $("#tab-today").innerHTML = `<div class="empty" style="margin-top:14px">${esc(e.message)}<br>Esegui <code>python -m fbi run</code> sul server.</div>`;
   }
+  if (window.FBI_EMBED) { $("#meta").textContent += " · istantanea"; return; }
   try {
     const st = await getJSON("/api/status");
     $("#btn-run").hidden = !st.actions_enabled;

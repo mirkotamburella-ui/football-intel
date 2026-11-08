@@ -81,3 +81,9 @@ dialog::backdrop { background: rgba(5, 10, 25, .55); }
 .close { width: 100%; margin-top: 12px; padding: 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; font-weight: 600; }
 pre { white-space: pre-wrap; word-break: break-word; font-size: .75rem; background: var(--surface-2); padding: 10px; border-radius: 10px; max-height: 50vh; overflow: auto; }
 .src { overflow-wrap: anywhere; } a { color: var(--accent); }
+.bookbar { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.bk { flex: 1 1 0; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; font-size: .82rem; font-weight: 600; }
+.bk.on-yes { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+.bk.on-no { background: var(--bad-soft); color: var(--bad); border-color: var(--bad); }
+.leg.absent { opacity: .75; }
+.bad-text { color: var(--bad); font-weight: 600; }

@@ -5,7 +5,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const pct = (p, d = 0) => (p == null ? "n.d." : (p * 100).toFixed(d) + "%");
 const sgn = (x) => (x == null ? "n.d." : (x >= 0 ? "+" : "") + (x * 100).toFixed(1) + "%");
-const state = { report: null, history: null, filter: "all", q: "" };
+const state = { report: null, history: null, filter: "all", q: "", onlyBook: false };
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage non disponibile */ } },
@@ -28,6 +28,31 @@ function relPill(level) {
   const cls = level === "Alta" ? "ok" : level === "Media" ? "warn" : "bad";
   return `<span class="pill ${cls}">Affidabilità ${esc(level || "n.d.")}</span>`;
 }
+/* ----------------------------------------- presenza sul bookmaker dell'utente */
+// Il palinsesto di Sisal non è disponibile a nessun provider di dati: lo segna l'utente.
+const BOOK = "Sisal";
+let marks = {};
+try { marks = JSON.parse(store.get("fbi-book-marks") || "{}") || {}; } catch { marks = {}; }
+try { state.onlyBook = store.get("fbi-only-book") === "1"; } catch { /* default */ }
+const mark = (eid) => marks[eid];
+function setMark(eid, v) {
+  if (marks[eid] === v) delete marks[eid]; else marks[eid] = v;
+  store.set("fbi-book-marks", JSON.stringify(marks));
+}
+// visibile? con "Solo su Sisal" solo le segnate ✓; altrimenti tutte tranne le segnate ✗
+const bookVisible = (eid) => (state.onlyBook ? mark(eid) === "yes" : mark(eid) !== "no");
+function bookButtons(eid) {
+  const m = mark(eid);
+  return `<div class="bookbar" role="group" aria-label="Presenza su ${BOOK}">
+    <button class="bk ${m === "yes" ? "on-yes" : ""}" data-mark="${esc(eid)}|yes">✓ C'è su ${BOOK}</button>
+    <button class="bk ${m === "no" ? "on-no" : ""}" data-mark="${esc(eid)}|no">✗ Non c'è</button></div>`;
+}
+function bookToggle() {
+  const n = Object.values(marks).filter((v) => v === "yes").length;
+  return `<div class="filters"><button data-onlybook="1" class="${state.onlyBook ? "on" : ""}">Solo su ${BOOK} (${n})</button></div>
+    ${state.onlyBook && !n ? `<p class="small muted">Nessuna partita segnata. Apri le partite e tocca "✓ C'è su ${BOOK}" dopo averle trovate nell'app ${BOOK}.</p>` : ""}`;
+}
+
 // quota minima per avere valore (EV ≥ 0); calcolata qui se il report è precedente al campo
 function minOdds(s) {
   if (s.min_odds_for_value) return s.min_odds_for_value;
@@ -50,9 +75,10 @@ function renderToday(r) {
   const passed = r.agents.find((a) => a.agent_id === "A12")?.summary?.selections_qc_passed ?? 0;
   const regions = r.regions.map((g) => `<tr><td>${esc(g.region)}</td><td class="r">${g.matches_today}</td></tr>`).join("");
   const comps = r.competitions_monitored.map(([c, n]) => `${esc(c)} (${n})`).join(" · ");
-  const best = r.best_opportunities.length
-    ? r.best_opportunities.map(selCard).join("")
-    : `<div class="empty">Nessuna selezione valutabile oggi.</div>`;
+  const bestList = r.best_opportunities.filter((x) => bookVisible(x.event_id));
+  const best = bestList.length
+    ? bestList.map(selCard).join("")
+    : `<div class="empty">${state.onlyBook ? `Nessuna opportunità tra le partite segnate su ${BOOK}.` : "Nessuna selezione valutabile oggi."}</div>`;
   const conform = r.best_opportunities.filter((s) => s.qc_passed).length;
   $("#tab-today").innerHTML = `
     <div class="kpis">
@@ -67,6 +93,7 @@ function renderToday(r) {
     </div>
     ${(r.changes_since_previous || []).length ? `<div class="card"><h3>Variazioni dall'ultima analisi</h3><ul class="clean">${r.changes_since_previous.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></div>` : ""}
     <h2>Migliori opportunità</h2>
+    ${bookToggle()}
     ${conform === 0 && r.best_opportunities.length ? `<div class="empty">Nessuna selezione supera tutti i controlli di qualità. Quelle sotto sono mostrate <b>solo a scopo informativo</b>, con il motivo dell'esclusione.</div>` : ""}
     ${best}
     <h2>Copertura geografica</h2>
@@ -93,6 +120,7 @@ function selCard(s) {
     <div class="row small" style="margin-top:6px"><span>Prob. stimata <b class="num">${pct(s.p_est)}</b> <span class="muted">(${pct(s.p_est_range_90[0])}–${pct(s.p_est_range_90[1])})</span></span><span class="num">EV ${sgn(s.ev)}</span></div>
     <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${status}${relPill(s.reliability_level)}${riskPill(s.risk_level)}${verPill(s.fixture_verification)}</div>
     ${!s.qc_passed ? `<div class="small muted" style="margin-top:6px">Motivo: ${esc(s.qc_failures.slice(0, 2).join("; "))}</div>` : ""}
+    ${bookButtons(s.event_id)}
   </div>`;
 }
 
@@ -100,11 +128,13 @@ function selCard(s) {
 function accBlock(title, a, stake) {
   if (!a) return `<h2>${title}</h2><div class="empty">Non calcolata.</div>`;
   if (a.status !== "ok") return `<h2>${title}</h2><div class="empty"><b>Non disponibile.</b> ${esc(a.reason)}</div>`;
-  const legs = a.legs.map((l) => `<div class="leg tap" data-sel="${esc(l.event_id)}|${esc(l.key)}">
+  const absent = a.legs.filter((l) => mark(l.event_id) === "no").length;
+  const legs = a.legs.map((l) => `<div class="leg tap ${mark(l.event_id) === "no" ? "absent" : ""}" data-sel="${esc(l.event_id)}|${esc(l.key)}">
       <div><b>${esc(l.match)}</b><div class="muted small">${esc(l.competition)} · ${esc(l.kickoff_local.slice(11))}</div>
-      <div class="small">${esc(l.label)} · p ${pct(l.p_est)} · AI ${l.score.final} · ${esc(l.bookmaker)}${minOdds(l) ? ` · conviene da ${minOdds(l).toFixed(2)}` : ""}</div></div>
+      <div class="small">${esc(l.label)} · p ${pct(l.p_est)} · AI ${l.score.final} · ${esc(l.bookmaker)}${minOdds(l) ? ` · conviene da ${minOdds(l).toFixed(2)}` : ""}</div>
+      ${mark(l.event_id) === "no" ? `<div class="small bad-text">Non disponibile su ${BOOK}: la multipla così non è giocabile</div>` : ""}</div>
       <div class="big num">${l.odds}</div></div>`).join("");
-  return `<h2>${title}</h2><div class="card">${legs}
+  return `<h2>${title}</h2>${absent ? `<div class="empty">${absent} partit${absent > 1 ? "e" : "a"} di questa multipla non ${absent > 1 ? "sono" : "è"} su ${BOOK}: non giocarla così com'è.</div>` : ""}<div class="card">${legs}
     <div class="stats">
       <div><b>${a.total_odds}</b><span>quota totale</span></div>
       <div><b>${a.potential_gross_return_eur.toFixed(2)} €</b><span>ritorno lordo potenziale su ${stake} €</span></div>
@@ -119,11 +149,12 @@ function accBlock(title, a, stake) {
 }
 
 function renderAccas(r) {
-  const singles = r.top_singles.length ? r.top_singles.map(selCard).join("") : `<div class="empty">${esc(r.top_singles_note || "Nessuna selezione conforme.")}</div>`;
+  const sl = r.top_singles.filter((x) => bookVisible(x.event_id));
+  const singles = sl.length ? sl.map(selCard).join("") : `<div class="empty">${esc(r.top_singles.length ? `Nessuna singola tra le partite visibili (filtro ${BOOK}).` : r.top_singles_note || "Nessuna selezione conforme.")}</div>`;
   const qc = (r.qc_failure_stats || []).map(([k, n]) => `<tr><td>${esc(k)}</td><td class="r">${n}</td></tr>`).join("");
   $("#tab-accas").innerHTML = accBlock("Multipla principale", r.main_accumulator, r.stake_eur)
     + accBlock("Multipla alternativa (prudente)", r.prudent_accumulator, r.stake_eur)
-    + `<h2>5 migliori singole</h2>${singles}${r.top_singles_note ? `<p class="small muted">${esc(r.top_singles_note)}</p>` : ""}
+    + `<h2>5 migliori singole</h2>${bookToggle()}${singles}${r.top_singles_note ? `<p class="small muted">${esc(r.top_singles_note)}</p>` : ""}
     <h2>Perché le selezioni vengono scartate</h2><div class="card scroll"><table><tr><th>Controllo</th><th class="r">Selezioni</th></tr>${qc}</table>
     <p class="small muted">Soglie: punteggio ≥ ${r.thresholds.min_selection_score}, EV ≥ ${sgn(r.thresholds.min_ev)}, quota ≥ ${r.thresholds.min_leg_odds}, quote aggiornate da ≤ ${r.thresholds.max_odds_age_minutes} min. I criteri non vengono mai abbassati per raggiungere 5 eventi.</p></div>`;
 }
@@ -131,6 +162,7 @@ function renderAccas(r) {
 /* ------------------------------------------------------------- PARTITE */
 function renderMatches(r) {
   const cards = r.match_cards.filter((c) => {
+    if (!bookVisible(c.event_id)) return false;
     if (state.filter === "ok" && !c.recommended) return false;
     if (state.filter === "high" && c.reliability_level !== "Alta") return false;
     if (state.q) {
@@ -142,6 +174,7 @@ function renderMatches(r) {
   const f = (k, l) => `<button data-filter="${k}" class="${state.filter === k ? "on" : ""}">${l}</button>`;
   $("#tab-matches").innerHTML = `<input type="search" id="q" placeholder="Cerca squadra o competizione" value="${esc(state.q)}">
     <div class="filters">${f("all", "Tutte")}${f("ok", "Con selezione conforme")}${f("high", "Affidabilità alta")}</div>
+    ${bookToggle()}
     <p class="small muted">${cards.length} partite</p>
     ${cards.map((c) => {
       const b = c.recommended || c.best_candidate;
@@ -150,7 +183,8 @@ function renderMatches(r) {
         <div class="muted small">${esc(c.competition)}</div>
         ${b ? `<div class="row small" style="margin-top:6px"><span>${c.recommended ? "Consigliata" : "Migliore (non conforme)"}: <b>${esc(b.label)}</b> @ ${b.odds}</span><span class="pill acc">AI ${b.score.final}</span></div>`
             : `<div class="small muted" style="margin-top:6px">Nessuna quota/modello disponibile</div>`}
-        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${relPill(c.reliability_level)}${verPill(c.fixture_verification)}</div></div>`;
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${relPill(c.reliability_level)}${verPill(c.fixture_verification)}</div>
+        ${bookButtons(c.event_id)}</div>`;
     }).join("")}`;
   $("#q").addEventListener("input", (e) => { state.q = e.target.value.toLowerCase(); renderMatches(r); $("#q").focus(); });
 }
@@ -159,7 +193,9 @@ function matchDetail(eid, focusKey) {
   const c = state.report.match_cards.find((m) => m.event_id === eid);
   if (!c) return;
   const s = c.selections.find((x) => x.key === focusKey) || c.recommended || c.best_candidate;
+  state.detail = [eid, focusKey];
   let html = `<h2 style="margin-top:0">${esc(c.match)}</h2><div class="muted small">${esc(c.competition)} · ${esc(c.kickoff_local)} (ora italiana)</div>
+    ${bookButtons(eid)}
     <div style="margin:8px 0">${relPill(c.reliability_level)} <span class="pill">qualità dati ${c.data_quality ?? "n.d."}</span> ${verPill(c.fixture_verification)}</div>
     ${c.fixture_verification ? `<p class="small muted">Verifica partita: ${esc(c.fixture_verification.note)} (fonti: ${esc(c.fixture_verification.sources.join(", "))}).</p>` : ""}`;
   if (c.data_notes.length) html += `<p class="small muted">${esc(c.data_notes.join(" · "))}</p>`;
@@ -273,6 +309,23 @@ document.addEventListener("click", (e) => {
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === "tab-" + tab.dataset.tab));
     store.set("fbi-tab", tab.dataset.tab);
     window.scrollTo(0, 0);
+    return;
+  }
+  const mk = e.target.closest("[data-mark]");
+  if (mk) {
+    const [eid, v] = mk.dataset.mark.split("|");
+    setMark(eid, v);
+    const y = window.scrollY;
+    renderAll();
+    window.scrollTo(0, y);
+    if ($("#detail").open && state.detail) matchDetail(...state.detail);
+    return;
+  }
+  const ob = e.target.closest("[data-onlybook]");
+  if (ob) {
+    state.onlyBook = !state.onlyBook;
+    store.set("fbi-only-book", state.onlyBook ? "1" : "0");
+    renderAll();
     return;
   }
   const f = e.target.closest("[data-filter]");

@@ -30,6 +30,7 @@ from .agents.a09_value import ValueBettingAnalyst
 from .agents.a10_risk import RiskManager
 from .agents.a11_contrarian import ContrarianAnalyst
 from .agents.a12_strategist import FinalBettingStrategist
+from .accumulator import diversify
 from .agents.base import validate_report
 from .context import RunContext, utc_iso
 from .quality import qc_report
@@ -97,7 +98,7 @@ def build_report(ctx: RunContext, reports: dict, timeline: list[dict], started: 
     cards = reports.get("A12", {}).get("matches", {})
     # migliori opportunità: prima le conformi al QC, poi (solo informative) le migliori per punteggio
     cand = [c["best_candidate"] for c in cards.values() if c.get("best_candidate")]
-    best = sorted(cand, key=lambda x: (-x["qc_passed"], -x["score"]["final"]))[:10]
+    best = diversify(sorted(cand, key=lambda x: (-x["qc_passed"], -x["score"]["final"])), ctx.settings.max_per_league)[:10]
     report = {
         "schema_version": 1,
         "system_version": __version__,

@@ -149,7 +149,7 @@ Punteggio finale = base − penalità Contrarian (max 10). **Un punteggio alto n
 quota con fonte e timestamp e aggiornata da ≤ 90 min · bookmaker preferito · partita verificata, pre-match e
 a ≥ 10 min dal via · modello statistico disponibile (niente scelte "a intuito") · ≥ 5 partite di campionato
 per squadra · qualità dati ≥ 0,55 · campionato non tier 3 · punteggio ≥ 60 · EV ≥ 0 · quota ≥ 1,20 · p ≥ 35% ·
-quota ≤ 3,50 · niente pareggio secco · modelli non in forte disaccordo · una sola selezione per partita.
+quota ≤ 3,50 · niente pareggio secco · modelli non in forte disaccordo · una sola selezione per partita · massimo 2 selezioni per campionato (`MAX_PER_LEAGUE`).
 Le probabilità sono mostrate al punto percentuale e sempre con intervallo (niente falsa precisione).
 
 ### Multiple
@@ -223,7 +223,7 @@ data/logs/fbi.log                     log con rotazione
 ```bash
 python -m unittest discover -s tests -t .
 ```
-34 test: matematica (de-vig, Poisson, GLM, Elo, Monte Carlo, copula), regole (budget ≤ 10 €, settlement di
+35 test: matematica (de-vig, Poisson, GLM, Elo, Monte Carlo, copula), regole (budget ≤ 10 €, settlement di
 tutti i mercati, QC, multiple 5–10 senza doppioni, correlazioni), parser su payload reali, provider a chiave
 con risposte simulate, e un **test end-to-end offline** in cui i 12 agenti girano su risposte reali ESPN
 catturate l'8/11/2026 (`tests/fixtures/e2e`, ridotte con `scripts/build_test_fixture.py`).

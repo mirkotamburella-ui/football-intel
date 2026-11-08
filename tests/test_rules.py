@@ -80,7 +80,7 @@ class Accumulators(unittest.TestCase):
         self.assertIn("non vengono abbassati", r["reason"])
 
     def test_main_between_5_and_10_one_leg_per_match(self):
-        pool = [sel(i, score=80 - i, p=0.8, odds=1.3) for i in range(14)]
+        pool = [sel(i, score=80 - i, p=0.8, odds=1.3, league=f"L{i % 7}") for i in range(14)]
         pool.append(dict(sel(0, score=99), key="DC|1X"))  # seconda selezione sulla stessa partita
         r = build_main(pool, self.s, POLICY)
         self.assertEqual(r["status"], "ok")
@@ -91,18 +91,29 @@ class Accumulators(unittest.TestCase):
         self.assertAlmostEqual(r["potential_gross_return_eur"], round(r["stake_eur"] * r["total_odds"], 2), places=1)
         self.assertEqual(qc_report({"main_accumulator": r}), [])
 
+    def test_max_two_per_league(self):
+        pool = [sel(i, score=90 - i, p=0.8, odds=1.3, league="por.1") for i in range(5)]
+        pool += [sel(10 + i, score=70 - i, p=0.8, odds=1.3, league=f"L{i}") for i in range(4)]
+        r = build_main(pool, self.s, POLICY)
+        self.assertEqual(r["status"], "ok")
+        leagues = [l["correlation_tags"]["league"] for l in r["legs"]]
+        self.assertLessEqual(leagues.count("por.1"), self.s.max_per_league)
+        few = build_main([sel(i, league="por.1") for i in range(6)], self.s, POLICY)
+        self.assertEqual(few["status"], "not_possible")  # 6 conformi ma tutte dello stesso campionato
+
     def test_extra_legs_need_higher_score(self):
-        pool = [sel(i, score=65) for i in range(9)]
+        pool = [sel(i, score=65, league=f"L{i}") for i in range(9)]
         r = build_main(pool, self.s, POLICY)
         self.assertEqual(r["legs_count"], 5)  # le gambe oltre la 5ª richiedono score ≥ 68
 
     def test_prudent(self):
-        pool = [sel(i, p=0.6 + 0.02 * i) for i in range(8)]
+        pool = [sel(i, p=0.6 + 0.02 * i, league=f"L{i}") for i in range(8)]
         r = build_prudent(pool, self.s, POLICY)
         self.assertEqual(r["status"], "ok")
         self.assertTrue(all(l["p_est"] >= self.s.prudent_min_leg_prob for l in r["legs"]))
 
     def test_correlation_increases_joint_prob(self):
+        self.s.max_per_league = 5
         same = build_main([sel(i, p=0.6, score=70) for i in range(5)], self.s, {"same_league": 0.5, "same_league_same_kickoff": 0.5})
         diff = build_main([sel(i, p=0.6, score=70, league=f"L{i}") for i in range(5)], self.s, POLICY)
         self.assertGreater(same["joint_probability"], diff["joint_probability"])

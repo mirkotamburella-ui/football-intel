@@ -2,7 +2,7 @@
 qualità, classifica le opportunità e costruisce multipla principale, alternativa e singole."""
 from __future__ import annotations
 
-from ..accumulator import build_main, build_prudent
+from ..accumulator import best_per_match, build_main, build_prudent, diversify
 from ..quality import qc_selection, round_prob
 from ..scoring import score_selection
 from .base import Agent
@@ -96,14 +96,8 @@ class FinalBettingStrategist(Agent):
                            f"con quota {prudent['total_odds']} contro {main['total_odds']}.",
             }
         singles = sorted({(x["event_id"], x["key"]): x for x in eligible}.values(), key=lambda x: (-x["score"]["final"], -x["ev"]))
-        seen, top = set(), []
-        for x in singles:
-            if x["event_id"] in seen:
-                continue
-            seen.add(x["event_id"])
-            top.append(x)
-            if len(top) == 5:
-                break
+        top = diversify(best_per_match(singles), s.max_per_league)
+        top = sorted(top, key=lambda x: (-x["score"]["final"], -x["ev"]))[:5]
         summary = {
             "selections_evaluated": len(all_sel),
             "selections_qc_passed": len(eligible),

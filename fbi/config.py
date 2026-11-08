@@ -82,6 +82,9 @@ class Settings:
     acca_max_legs: int = 10
     acca_extra_leg_min_score: float = 68.0  # oltre la 5a gamba serve un punteggio più alto
     acca_min_joint_prob: float = 0.02  # sotto il 2% la multipla è considerata lotteria
+    # diversificazione: massimo N selezioni dello stesso campionato in multiple, singole e opportunità
+    # (partite dello stesso campionato sono correlate: concentrarle aumenta il rischio)
+    max_per_league: int = 2
     # multipla alternativa prudente
     prudent_legs: int = 5
     prudent_min_leg_prob: float = 0.62
@@ -148,6 +151,7 @@ def get_settings(load_env_file: bool = True) -> Settings:
         min_ev=_f("MIN_EV", 0.0),
         min_leg_odds=_f("MIN_LEG_ODDS", 1.20),
         max_odds_age_minutes=_i("MAX_ODDS_AGE_MINUTES", 90),
+        max_per_league=_i("MAX_PER_LEAGUE", 2),
         dashboard_host=_s("DASHBOARD_HOST", "0.0.0.0"),
         dashboard_port=_i("DASHBOARD_PORT", 8365),
         dashboard_token=_s("DASHBOARD_TOKEN"),

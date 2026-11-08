@@ -98,7 +98,7 @@ def build_report(ctx: RunContext, reports: dict, timeline: list[dict], started: 
     cards = reports.get("A12", {}).get("matches", {})
     # migliori opportunità: prima le conformi al QC, poi (solo informative) le migliori per punteggio
     cand = [c["best_candidate"] for c in cards.values() if c.get("best_candidate")]
-    best = diversify(sorted(cand, key=lambda x: (-x["qc_passed"], -x["score"]["final"])), ctx.settings.max_per_league)[:10]
+    best = diversify(sorted(cand, key=lambda x: (-x["qc_passed"], len(x["qc_failures"]), -x["score"]["final"])), ctx.settings.max_per_league)[:10]
     report = {
         "schema_version": 1,
         "system_version": __version__,

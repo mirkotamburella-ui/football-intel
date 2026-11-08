@@ -34,7 +34,9 @@ def challenge(c: dict, eid: str, a: dict) -> list[dict]:
     opp = {"home": "away", "away": "home"}.get(side or "")
     # 1. modello vs mercato
     if abs(c["edge_pp"]) >= 8:
-        obj(2.0, "Il modello si discosta molto dal mercato: più spesso è il modello a sbagliare (informazioni non catturate)",
+        w = 4.0 if abs(c["edge_pp"]) >= 15 else 2.0
+        obj(w, f"Il modello si discosta di {c['edge_pp']:+.0f} punti dal mercato: un divario così ampio è più spesso un errore "
+               "del modello (informazioni che non vede) che un vero vantaggio",
             {"p_model": c["p_model"], "p_market_fair": c["p_market_fair"], "agent": "A09"})
     # 2. movimento di quota contrario (quota in crescita = mercato meno convinto)
     if c.get("movement_pct") is not None and c["movement_pct"] >= 5:

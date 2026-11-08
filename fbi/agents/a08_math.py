@@ -57,7 +57,16 @@ class MathematicalPrediction(Agent):
             draw_rate = (draw_rate * len(cur) + 0.26 * 40) / (len(cur) + 40)  # shrink verso media storica ~26%
             home_g = [m["home_goals"] for m in cur if not m.get("neutral")]
             away_g = [m["away_goals"] for m in cur if not m.get("neutral")]
-            return {"glm": glm, "elo": elo, "n_matches": len(matches), "draw_rate": draw_rate,
+            profile = None
+            if len(cur) >= 20:
+                profile = {"matches": len(cur), "season": "stagione in corso",
+                           "goals_per_match": round(mean(m["home_goals"] + m["away_goals"] for m in cur), 2),
+                           "draw_rate": round(mean(m["home_goals"] == m["away_goals"] for m in cur), 3),
+                           "home_win_rate": round(mean(m["home_goals"] > m["away_goals"] for m in cur), 3),
+                           "over25_rate": round(mean(m["home_goals"] + m["away_goals"] > 2.5 for m in cur), 3),
+                           "btts_rate": round(mean(m["home_goals"] > 0 and m["away_goals"] > 0 for m in cur), 3),
+                           "home_advantage_glm": round(glm.home_advantage(), 3) if glm.fitted else None}
+            return {"glm": glm, "elo": elo, "n_matches": len(matches), "draw_rate": draw_rate, "profile": profile,
                     "home_avg": mean(home_g) if len(home_g) >= 10 else None,
                     "away_avg": mean(away_g) if len(away_g) >= 10 else None}
         return ctx.memo(f"league_models:{slug}", build)
@@ -164,6 +173,7 @@ class MathematicalPrediction(Agent):
                 "most_likely_scores": most_likely_scores(m),
                 "monte_carlo": {"simulations": ctx.settings.monte_carlo_sims, "max_abs_diff_vs_analytic_rho0": sim_check},
                 "sample": {"home_games": n_h, "away_games": n_a, "league_matches_in_fit": lm["n_matches"] if lm else 0},
+                "league_profile": lm.get("profile") if lm else None,
             }
 
         matches = self.per_match(ctx, fixtures, one)

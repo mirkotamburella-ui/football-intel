@@ -135,15 +135,20 @@ qualità dei dati. Una quota alta senza vantaggio stimato non è "valore".
 ### Scoring 0–100 (trasparente, ogni componente con spiegazione nel report)
 | Componente | Max | Calcolo |
 |---|---|---|
-| Forma recente (A02) | 15 | 15 × probabilità della selezione implicata dalla forma |
-| Statistiche offensive e difensive (A03) | 20 | 20 × probabilità Poisson dai tassi gol osservati |
-| xG e modelli previsionali (A08) | 20 | 20 × (prob. ensemble − penalità per disaccordo tra modelli) |
+| Forma recente (A02) | 15 | conferma rispetto al mercato: 7,5 se la forma concorda col mercato, 15 se vede +15 pp |
+| Statistiche offensive e difensive (A03) | 20 | conferma dei tassi gol osservati: 10 se concordano col mercato, 20 a +10 pp |
+| xG e modelli previsionali (A08) | 20 | conferma dei modelli: 10 → 20 a +10 pp, meno punti se i modelli sono in disaccordo |
 | Formazioni e indisponibili (A05) | 10 | 5 se dati assenti (neutro, non positivo); 8 ± assenze; +2 formazioni ufficiali |
 | Motivazioni (A06) | 10 | 5 + 5 × differenza indice motivazione; −2 se rischio turnover |
 | Valore della quota (A09) | 15 | EV −5% → 0 punti … EV +10% → 15 punti |
 | Affidabilità dei dati (A10) | 10 | 10 × qualità dati |
 
-Punteggio finale = base − penalità Contrarian (max 10). **Un punteggio alto non è una garanzia di vincita.**
+Le componenti statistiche non premiano la probabilità in sé (vincerebbero sempre le quote 1,10), ma quanto
+ogni fonte indipendente conferma che la selezione è più probabile di quanto dica il mercato senza margine.
+Ogni scheda riporta anche il profilo del campionato (gol a partita, pareggi, vittorie in casa, Over 2.5),
+così la scelta è letta nel contesto della sua lega.
+
+Punteggio finale = base − penalità Contrarian (max 10; divari modello/mercato ≥ 15 pp pesano 4 punti). **Un punteggio alto non è una garanzia di vincita.**
 
 ### Controllo qualità (una selezione entra in multipla solo se supera TUTTO)
 quota con fonte e timestamp e aggiornata da ≤ 90 min · bookmaker preferito · partita verificata, pre-match e

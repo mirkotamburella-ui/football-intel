@@ -17,6 +17,10 @@ def rationale(sel: dict, a: dict) -> list[str]:
         if f.get("last5_league"):
             r = f["last5_league"]
             out.append(f"{f['team']}: ultime 5 di campionato {r['sequence']} ({r['ppg']} pt/partita, gol {r['gf']}-{r['ga']})")
+    lp = mth.get("league_profile")
+    if lp:
+        out.append(f"Profilo del campionato ({lp['matches']} partite analizzate): {lp['goals_per_match']} gol a partita, "
+                   f"pareggi {lp['draw_rate']:.0%}, vittorie in casa {lp['home_win_rate']:.0%}, Over 2.5 {lp['over25_rate']:.0%}")
     if mth.get("available"):
         out.append(f"Modelli ({', '.join(mth['models_used'])}): gol attesi {mth['lambda_home']:.2f}–{mth['lambda_away']:.2f}, "
                    f"p(modello)={sel['p_model']:.0%} vs p(mercato equa)={sel['p_market_fair']:.0%}")
@@ -71,7 +75,9 @@ class FinalBettingStrategist(Agent):
                 sel["rationale"] = rationale(sel, inputs)
                 sels.append(sel)
                 all_sel.append(sel)
-            sels.sort(key=lambda x: (-x["qc_passed"], -x["score"]["final"]))
+            # prima le conformi, poi quelle con meno criteri non rispettati, poi per punteggio:
+            # una quota 9,50 con punteggio alto ma fuori dai limiti di rischio non deve "rappresentare" la partita
+            sels.sort(key=lambda x: (-x["qc_passed"], len(x["qc_failures"]), -x["score"]["final"]))
             cards[eid] = {
                 "event_id": eid, "match": f"{fx['home']['name']} - {fx['away']['name']}", "competition": fx["competition"],
                 "region": fx.get("region"), "kickoff_local": fx["kickoff_local"],

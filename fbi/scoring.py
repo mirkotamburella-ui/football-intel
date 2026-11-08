@@ -2,13 +2,18 @@
 
 | Componente                          | Max | Come si calcola                                                     |
 |-------------------------------------|-----|---------------------------------------------------------------------|
-| Forma recente (A02)                 | 15  | 15 × probabilità della selezione implicata dalla forma              |
-| Statistiche offensive/difensive (A03)| 20 | 20 × probabilità Poisson dai tassi gol osservati (casa/trasferta)   |
-| xG e modelli previsionali (A08)     | 20  | 20 × (prob. ensemble − penalità per disaccordo tra modelli)         |
+| Forma recente (A02)                 | 15  | conferma della forma rispetto al mercato: 7,5 se concorda, 15 se +15 pp |
+| Statistiche offensive/difensive (A03)| 20 | conferma dei tassi gol rispetto al mercato: 10 se concorda, 20 se +10 pp |
+| xG e modelli previsionali (A08)     | 20  | conferma dei modelli rispetto al mercato (−disaccordo): 10 → 20 se +10 pp |
 | Formazioni e indisponibili (A05)    | 10  | 5 se dati assenti (neutro); 8 ± assenze; +2 formazioni ufficiali    |
 | Motivazioni (A06)                   | 10  | 5 + 5 × (indice motivazione selezione − avversario), turnover       |
 | Valore della quota (A09)            | 15  | 15 × clip((EV + 5%) / 15%): EV −5% → 0 punti, EV +10% → 15 punti    |
 | Affidabilità dei dati (A10)         | 10  | 10 × qualità dati (0–1)                                             |
+
+Le tre componenti statistiche NON premiano la probabilità in sé (altrimenti vincerebbero
+sempre le selezioni a quota 1,10), ma quanto ogni fonte indipendente CONFERMA che la
+selezione è più probabile di quanto dica il mercato senza margine: 50% dei punti se la
+fonte concorda col mercato, il massimo se vede un vantaggio netto, meno se lo contraddice.
 
 Punteggio finale = base − penalità Contrarian (A11, max 10). Un punteggio alto NON è
 una garanzia di vincita: misura la coerenza tra fonti indipendenti di evidenza.
@@ -81,23 +86,38 @@ def score_selection(c: dict, eid: str, a: dict) -> dict:
     key, side = c["key"], side_of(c["key"])
     comps = []
 
+    fair_all = (a["A07"]["matches"].get(eid) or {}).get("fair") or {}
+    pf = _p(fair_all, key) if key in fair_all else c.get("p_market_fair")
+
+    def rel(p_src: float | None, max_pts: float, span: float) -> tuple[float, float | None]:
+        """Punti per conferma rispetto al mercato: 50% se p_src = p_mercato, 100% a +span."""
+        if p_src is None or pf is None:
+            return 0.0, None
+        sup = _clip(0.5 + (p_src - pf) / (2 * span))
+        return round(max_pts * sup, 2), round(sup, 3)
+
+    def edge_txt(p_src):
+        return f"{p_src:.0%} contro {pf:.0%} del mercato ({(p_src - pf) * 100:+.1f} pp)"
+
     # 1. forma (15)
     p, why = form_component(key, form)
-    comps.append({"name": "Forma recente", "agent": "A02", "max": 15, "points": round(15 * p, 2) if p is not None else 0.0,
-                  "support": round(p, 3) if p is not None else None,
-                  "explanation": why if p is not None else why + " → 0 punti"})
+    pts, sup = rel(p, 15, 0.15)
+    comps.append({"name": "Forma recente", "agent": "A02", "max": 15, "points": pts, "support": sup,
+                  "explanation": f"{why}; probabilità secondo la forma {edge_txt(p)}" if sup is not None else why + " → 0 punti"})
     # 2. statistiche offensive/difensive (20)
     obs = _p(offdef.get("observed_rates_probs"), key)
-    comps.append({"name": "Statistiche offensive e difensive", "agent": "A03", "max": 20,
-                  "points": round(20 * obs, 2) if obs is not None else 0.0, "support": obs,
-                  "explanation": f"Poisson su tassi gol casa/trasferta (λ {offdef.get('lambda_home')}–{offdef.get('lambda_away')})" if obs is not None else "tassi osservati non disponibili → 0 punti"})
+    pts, sup = rel(obs, 20, 0.10)
+    comps.append({"name": "Statistiche offensive e difensive", "agent": "A03", "max": 20, "points": pts, "support": sup,
+                  "explanation": f"Poisson sui tassi gol casa/trasferta: {edge_txt(obs)}" if sup is not None else "tassi osservati non disponibili → 0 punti"})
     # 3. modelli (20)
     ens = _p(mth.get("ensemble"), key)
     dis = mth.get("model_disagreement_sd", 0) or 0
-    if ens is not None:
-        sup = _clip(ens - max(0.0, dis - 0.03))
-        comps.append({"name": "xG e modelli previsionali", "agent": "A08", "max": 20, "points": round(20 * sup, 2), "support": round(sup, 3),
-                      "explanation": f"ensemble {', '.join(mth.get('models_used', []))}: p={ens:.2f}, disaccordo σ={dis:.3f}"})
+    if ens is not None and pf is not None:
+        pts, sup = rel(ens, 20, 0.10)
+        pen = round(min(pts, 20 * max(0.0, dis - 0.03) * 5), 2)  # modelli in disaccordo → meno credibili
+        comps.append({"name": "xG e modelli previsionali", "agent": "A08", "max": 20, "points": round(pts - pen, 2), "support": sup,
+                      "explanation": f"ensemble {', '.join(mth.get('models_used', []))}: {edge_txt(ens)}; disaccordo σ={dis:.3f}"
+                                     + (f" (−{pen} punti)" if pen else "")})
     else:
         comps.append({"name": "xG e modelli previsionali", "agent": "A08", "max": 20, "points": 0.0, "support": None, "explanation": "modello non disponibile → 0 punti"})
     # 4. formazioni e indisponibili (10)

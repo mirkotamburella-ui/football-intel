@@ -1,0 +1,9 @@
+# Football Intelligence – automazione quotidiana (ora del server: impostare TZ=Europe/Rome)
+CRON_TZ=Europe/Rome
+# 1-7. analisi completa ogni mattina
+30 8 * * *   /percorso/football-intel/scripts/daily.sh run
+# 8. aggiornamento quote e formazioni prima dei calci d'inizio (ogni ora, 11-22)
+5 11-22 * * * /percorso/football-intel/scripts/daily.sh refresh
+# 9. verifica dei risultati a fine giornata e la mattina dopo (partite serali/americane)
+50 23 * * *  /percorso/football-intel/scripts/daily.sh verify
+0 8 * * *    /percorso/football-intel/scripts/daily.sh verify

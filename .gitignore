@@ -1,0 +1,8 @@
+.env
+data/cache/
+data/logs/
+data/reports/
+data/latest.json
+data/history.json
+__pycache__/
+*.pyc

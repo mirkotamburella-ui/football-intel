@@ -1,0 +1,3 @@
+# Unica dipendenza esterna: numpy (calcolo matriciale, regressione, Monte Carlo).
+# HTTP, server, test e logging usano solo la libreria standard Python (>= 3.10).
+numpy>=1.24

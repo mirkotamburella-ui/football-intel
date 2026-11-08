@@ -47,7 +47,7 @@ class LineupInjuryScout(Agent):
                 block["injury_data"] = "ESPN" if tid in inj else None
             # API-Football: infortuni/squalifiche per fixture
             if af.enabled:
-                fxa = ctx.memo(f"af_fixture:{fx['event_id']}", lambda: af.find_fixture(ctx.today.isoformat(), fx["home"]["name"], fx["away"]["name"], fx["kickoff_utc"]))
+                fxa = ctx.memo(f"af_fixture:{fx['event_id']}", lambda: af.find_fixture(ctx.today.isoformat(), [fx["home"]["name"], fx["home"].get("espn_name")], [fx["away"]["name"], fx["away"].get("espn_name")], fx["kickoff_utc"]))
                 if fxa:
                     res = ctx.memo(f"af_inj:{fxa['fixture']['id']}", lambda: af.injuries(fxa["fixture"]["id"]))
                     items, f = res if res else (None, None)

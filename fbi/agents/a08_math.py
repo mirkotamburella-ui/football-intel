@@ -110,7 +110,7 @@ class MathematicalPrediction(Agent):
             if ctx.api_football.enabled:
                 af = ctx.api_football
                 # stesse chiavi memo di A03: il calcolo (e il budget API) avviene una volta sola
-                fxa = ctx.memo(f"af_fixture:{fx['event_id']}", lambda: af.find_fixture(ctx.today.isoformat(), fx["home"]["name"], fx["away"]["name"], fx["kickoff_utc"]))
+                fxa = ctx.memo(f"af_fixture:{fx['event_id']}", lambda: af.find_fixture(ctx.today.isoformat(), [fx["home"]["name"], fx["home"].get("espn_name")], [fx["away"]["name"], fx["away"].get("espn_name")], fx["kickoff_utc"]))
                 if fxa:
                     th, ta = fxa["teams"]["home"]["id"], fxa["teams"]["away"]["id"]
                     xh = ctx.memo(f"af_xg:{th}", lambda: af.team_xg(th))

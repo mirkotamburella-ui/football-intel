@@ -46,6 +46,13 @@ def similarity(a: str, b: str) -> float:
     return max(jacc, seq, contain)
 
 
+def match_any(home_a, away_a, home_b: str, away_b: str) -> float:
+    """Come match_pair, ma home_a/away_a possono essere liste di nomi alternativi."""
+    ha = [home_a] if isinstance(home_a, str) else [x for x in home_a if x]
+    aa = [away_a] if isinstance(away_a, str) else [x for x in away_a if x]
+    return max(match_pair(h, a, home_b, away_b) for h in ha for a in aa)
+
+
 def match_pair(home_a: str, away_a: str, home_b: str, away_b: str) -> float:
     direct = min(similarity(home_a, home_b), similarity(away_a, away_b))
     crossed = min(similarity(home_a, away_b), similarity(away_a, home_b))

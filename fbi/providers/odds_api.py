@@ -12,7 +12,7 @@ import threading
 from datetime import datetime, timedelta
 
 from ..http_client import HttpClient, HttpError
-from ..names import MATCH_THRESHOLD, match_pair
+from ..names import MATCH_THRESHOLD, match_any
 from .espn import parse_dt
 
 log = logging.getLogger("fbi.oddsapi")
@@ -156,7 +156,7 @@ def find_event(events: list[dict], home: str, away: str, kickoff_utc: str) -> di
     for ev in events:
         if abs(parse_dt(ev["commence"]) - ko) > timedelta(hours=2):
             continue
-        s = match_pair(home, away, ev["home"], ev["away"])
+        s = match_any(home, away, ev["home"], ev["away"])
         if s > best_s:
             best, best_s = ev, s
     return best if best_s >= MATCH_THRESHOLD else None

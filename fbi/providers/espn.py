@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from ..http_client import Fetched, HttpClient
+from ..team_names import display
 
 log = logging.getLogger("fbi.espn")
 
@@ -115,13 +116,15 @@ def parse_scoreboard(f: Fetched) -> list[dict]:
                     "completed": st.get("completed", False),
                     "home": {
                         "id": str(teams["home"]["team"]["id"]),
-                        "name": teams["home"]["team"]["displayName"],
+                        "name": display(teams["home"]["team"]["displayName"]),
+                        "espn_name": teams["home"]["team"]["displayName"],
                         "form": teams["home"].get("form"),
                         "score": teams["home"].get("score"),
                     },
                     "away": {
                         "id": str(teams["away"]["team"]["id"]),
-                        "name": teams["away"]["team"]["displayName"],
+                        "name": display(teams["away"]["team"]["displayName"]),
+                        "espn_name": teams["away"]["team"]["displayName"],
                         "form": teams["away"].get("form"),
                         "score": teams["away"].get("score"),
                     },
@@ -173,7 +176,7 @@ def parse_last_five(f: Fetched) -> dict[str, list[dict]]:
                     "competition": ev.get("competitionName") or ev.get("leagueName"),
                     "home": is_home,
                     "opponent_id": str((ev.get("opponent") or {}).get("id")),
-                    "opponent": (ev.get("opponent") or {}).get("displayName"),
+                    "opponent": display((ev.get("opponent") or {}).get("displayName")),
                     "gf": hg if is_home else ag,
                     "ga": ag if is_home else hg,
                     "result": ev.get("gameResult"),
@@ -257,7 +260,7 @@ def parse_standings(f: Fetched) -> dict[str, Any]:
             stats = {s.get("name"): s.get("value") for s in e.get("stats", [])}
             tid = str(e["team"]["id"])
             table[tid] = {
-                "team": e["team"].get("displayName"),
+                "team": display(e["team"].get("displayName")),
                 "rank": int(stats.get("rank") or 0),
                 "gp": int(stats.get("gamesPlayed") or 0),
                 "w": int(stats.get("wins") or 0),
@@ -291,9 +294,9 @@ def parse_schedule(f: Fetched, team_id: str) -> list[dict]:
                     "event_id": str(ev["id"]),
                     "date": ev["date"],
                     "home_id": str(teams["home"]["team"]["id"]),
-                    "home_name": teams["home"]["team"]["displayName"],
+                    "home_name": display(teams["home"]["team"]["displayName"]),
                     "away_id": str(teams["away"]["team"]["id"]),
-                    "away_name": teams["away"]["team"]["displayName"],
+                    "away_name": display(teams["away"]["team"]["displayName"]),
                     "home_goals": int(hs),
                     "away_goals": int(as_),
                     "neutral": comp.get("neutralSite", False),

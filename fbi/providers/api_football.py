@@ -11,7 +11,7 @@ import logging
 import threading
 
 from ..http_client import HttpClient, HttpError
-from ..names import MATCH_THRESHOLD, match_pair
+from ..names import MATCH_THRESHOLD, match_any
 from .espn import parse_dt
 
 log = logging.getLogger("fbi.apifootball")
@@ -63,7 +63,7 @@ class ApiFootballProvider:
                 continue
             if abs((t - ko).total_seconds()) > 7200:
                 continue
-            s = match_pair(home, away, fx["teams"]["home"]["name"], fx["teams"]["away"]["name"])
+            s = match_any(home, away, fx["teams"]["home"]["name"], fx["teams"]["away"]["name"])
             if s > best_s:
                 best, best_s = fx, s
         return best if best_s >= MATCH_THRESHOLD else None

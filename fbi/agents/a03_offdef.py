@@ -39,7 +39,7 @@ def team_offdef(ctx, fx, side, agent):
     xg = None
     if ctx.api_football.enabled:
         af = ctx.api_football
-        fxa = ctx.memo(f"af_fixture:{fx['event_id']}", lambda: af.find_fixture(ctx.today.isoformat(), fx["home"]["name"], fx["away"]["name"], fx["kickoff_utc"]))
+        fxa = ctx.memo(f"af_fixture:{fx['event_id']}", lambda: af.find_fixture(ctx.today.isoformat(), [fx["home"]["name"], fx["home"].get("espn_name")], [fx["away"]["name"], fx["away"].get("espn_name")], fx["kickoff_utc"]))
         if fxa:
             af_tid = fxa["teams"][side]["id"]
             xg = ctx.memo(f"af_xg:{af_tid}", lambda: af.team_xg(af_tid))

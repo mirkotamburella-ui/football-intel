@@ -195,6 +195,15 @@ class Parsers(unittest.TestCase):
         self.assertFalse(any(k[0] == "bet365" and k[1] == "OU" for k in q))
         self.assertTrue(all(x["source"] and x["fetched_at"] for x in q.values()))
 
+    def test_display_names(self):
+        from fbi.names import match_any
+        from fbi.team_names import display
+        self.assertEqual(display("FC Cologne"), "1. FC Köln")
+        self.assertEqual(display("Oldham Athletic"), "Oldham Athletic")  # solo corrispondenze esatte
+        self.assertEqual(display("Athletic"), "Athletic Club (MG)")
+        # l'abbinamento tra provider funziona sia col nome locale sia con quello ESPN
+        self.assertGreaterEqual(match_any(["1. FC Köln", "FC Cologne"], ["Bayer Leverkusen"], "FC Cologne", "Bayer Leverkusen"), 0.8)
+
     def test_name_matching(self):
         self.assertGreaterEqual(match_pair("Brighton & Hove Albion", "Brentford", "Brighton and Hove Albion", "Brentford"), 0.8)
         self.assertLess(match_pair("Inter Milan", "AC Milan", "AC Milan", "Inter Milan"), 0.8)

@@ -121,7 +121,7 @@ class OddsIntelligence(Agent):
                 self.log.info("quote ESPN non disponibili per %s: %s", fx["event_id"], e)
             matched = None
             if oa.enabled and slug in SPORT_KEYS:
-                matched = find_event(league_events(slug), fx["home"]["name"], fx["away"]["name"], fx["kickoff_utc"])
+                matched = find_event(league_events(slug), [fx["home"]["name"], fx["home"].get("espn_name")], [fx["away"]["name"], fx["away"].get("espn_name")], fx["kickoff_utc"])
                 if matched:
                     quotes += matched["quotes"]
                     if fx["event_id"] in extra_allowed:

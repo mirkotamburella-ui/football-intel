@@ -91,15 +91,20 @@ class Accumulators(unittest.TestCase):
         self.assertAlmostEqual(r["potential_gross_return_eur"], round(r["stake_eur"] * r["total_odds"], 2), places=1)
         self.assertEqual(qc_report({"main_accumulator": r}), [])
 
-    def test_max_two_per_league(self):
+    def test_league_soft_cap(self):
         pool = [sel(i, score=90 - i, p=0.8, odds=1.3, league="por.1") for i in range(5)]
         pool += [sel(10 + i, score=70 - i, p=0.8, odds=1.3, league=f"L{i}") for i in range(4)]
         r = build_main(pool, self.s, POLICY)
         self.assertEqual(r["status"], "ok")
         leagues = [l["correlation_tags"]["league"] for l in r["legs"]]
-        self.assertLessEqual(leagues.count("por.1"), self.s.max_per_league)
-        few = build_main([sel(i, league="por.1") for i in range(6)], self.s, POLICY)
-        self.assertEqual(few["status"], "not_possible")  # 6 conformi ma tutte dello stesso campionato
+        self.assertEqual(leagues.count("por.1"), self.s.max_per_league_hard)  # solide (score 86–90): fino a 4
+        # le gambe ≥ 3ª dello stesso campionato entrano solo se solide (punteggio ≥ 68), mai oltre 4
+        weak = build_main([sel(i, score=65, league="por.1") for i in range(6)], self.s, POLICY)
+        self.assertEqual(weak["status"], "not_possible")
+        strong = [sel(i, score=80, p=0.8, odds=1.3, league="por.1") for i in range(6)] + [sel(20, score=79, league="L1")]
+        r2 = build_main(strong, self.s, POLICY)
+        self.assertEqual(r2["status"], "ok")
+        self.assertEqual([l["correlation_tags"]["league"] for l in r2["legs"]].count("por.1"), self.s.max_per_league_hard)
 
     def test_extra_legs_need_higher_score(self):
         pool = [sel(i, score=65, league=f"L{i}") for i in range(9)]

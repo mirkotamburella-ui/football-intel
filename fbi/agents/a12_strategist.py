@@ -102,7 +102,7 @@ class FinalBettingStrategist(Agent):
                            f"con quota {prudent['total_odds']} contro {main['total_odds']}.",
             }
         singles = sorted({(x["event_id"], x["key"]): x for x in eligible}.values(), key=lambda x: (-x["score"]["final"], -x["ev"]))
-        top = diversify(best_per_match(singles), s.max_per_league)
+        top = diversify(best_per_match(singles), s)
         top = sorted(top, key=lambda x: (-x["score"]["final"], -x["ev"]))[:5]
         summary = {
             "selections_evaluated": len(all_sel),

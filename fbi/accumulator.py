@@ -55,25 +55,28 @@ def league_of(s: dict) -> str:
     return (s.get("correlation_tags") or {}).get("league") or s.get("league_slug") or s["event_id"]
 
 
-def diversify(items: list[dict], max_per_league: int) -> list[dict]:
-    """Mantiene l'ordine e scarta le selezioni oltre `max_per_league` per campionato."""
+def diversify(items: list[dict], settings) -> list[dict]:
+    """Mantiene l'ordine; per campionato: le prime `max_per_league` passano, le successive fino a
+    `max_per_league_hard` solo se conformi e con punteggio ≥ `league_extra_min_score`."""
     seen: dict[str, int] = {}
     out = []
     for s in items:
         lg = league_of(s)
-        if seen.get(lg, 0) < max_per_league:
-            seen[lg] = seen.get(lg, 0) + 1
+        n = seen.get(lg, 0)
+        solid = s.get("qc_passed", True) and s["score"]["final"] >= settings.league_extra_min_score
+        if n < settings.max_per_league or (n < settings.max_per_league_hard and solid):
+            seen[lg] = n + 1
             out.append(s)
     return out
 
 
 def build_main(eligible: list[dict], settings, policy: dict) -> dict:
     pool = sorted(best_per_match(eligible), key=lambda s: (-s["score"]["final"], -s["ev"]))
-    pool = diversify(pool, settings.max_per_league)
+    pool = diversify(pool, settings)
     if len(pool) < settings.acca_min_legs:
         return {"status": "not_possible", "eligible_count": len(pool),
                 "reason": f"solo {len(pool)} selezioni superano tutti i controlli di qualità (ne servono almeno {settings.acca_min_legs}, "
-                          f"massimo {settings.max_per_league} per campionato). "
+                          f"per campionato massimo {settings.max_per_league}, fino a {settings.max_per_league_hard} se con punteggio ≥ {settings.league_extra_min_score:.0f}). "
                           "I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme."}
     legs = pool[: settings.acca_min_legs]
     ev_ = evaluate(legs, policy, settings.stake_eur, settings.random_seed)
@@ -90,7 +93,7 @@ def build_main(eligible: list[dict], settings, policy: dict) -> dict:
         legs, ev_ = trial, tv
     ev_["status"] = "ok"
     ev_["legs"] = legs
-    ev_["selection_rule"] = (f"migliore selezione per partita, massimo {settings.max_per_league} per campionato, ordinate per punteggio; prime {settings.acca_min_legs} obbligatorie, "
+    ev_["selection_rule"] = (f"migliore selezione per partita, per campionato massimo {settings.max_per_league} (fino a {settings.max_per_league_hard} se punteggio ≥ {settings.league_extra_min_score:.0f}), ordinate per punteggio; prime {settings.acca_min_legs} obbligatorie, "
                              f"ulteriori solo con punteggio ≥ {settings.acca_extra_leg_min_score} e probabilità congiunta ≥ {settings.acca_min_joint_prob:.0%}")
     return ev_
 
@@ -98,7 +101,7 @@ def build_main(eligible: list[dict], settings, policy: dict) -> dict:
 def build_prudent(eligible: list[dict], settings, policy: dict) -> dict:
     pool = [s for s in eligible if s["p_est"] >= settings.prudent_min_leg_prob]
     pool = sorted(best_per_match(pool, key=lambda s: (s["p_est"], s["score"]["final"])), key=lambda s: (-s["p_est"], -s["score"]["final"]))
-    pool = diversify(pool, settings.max_per_league)
+    pool = diversify(pool, settings)
     n = settings.prudent_legs
     if len(pool) < n:
         return {"status": "not_possible", "eligible_count": len(pool),
@@ -106,5 +109,5 @@ def build_prudent(eligible: list[dict], settings, policy: dict) -> dict:
     legs = pool[:n]
     out = evaluate(legs, policy, settings.stake_eur, settings.random_seed)
     out.update({"status": "ok", "legs": legs,
-                "selection_rule": f"le {n} selezioni conformi con la probabilità stimata più alta (≥ {settings.prudent_min_leg_prob:.0%}), una per partita, massimo {settings.max_per_league} per campionato"})
+                "selection_rule": f"le {n} selezioni conformi con la probabilità stimata più alta (≥ {settings.prudent_min_leg_prob:.0%}), una per partita, per campionato massimo {settings.max_per_league} (fino a {settings.max_per_league_hard} se punteggio ≥ {settings.league_extra_min_score:.0f})"})
     return out

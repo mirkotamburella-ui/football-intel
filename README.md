@@ -154,7 +154,7 @@ Punteggio finale = base − penalità Contrarian (max 10; divari modello/mercato
 quota con fonte e timestamp e aggiornata da ≤ 90 min · bookmaker preferito · partita verificata, pre-match e
 a ≥ 10 min dal via · modello statistico disponibile (niente scelte "a intuito") · ≥ 5 partite di campionato
 per squadra · qualità dati ≥ 0,55 · campionato non tier 3 · punteggio ≥ 60 · EV ≥ 0 · quota ≥ 1,20 · p ≥ 35% ·
-quota ≤ 3,50 · niente pareggio secco · modelli non in forte disaccordo · una sola selezione per partita · massimo 2 selezioni per campionato (`MAX_PER_LEAGUE`).
+quota ≤ 3,50 · niente pareggio secco · modelli non in forte disaccordo · una sola selezione per partita · per campionato massimo 2 selezioni, fino a 4 se con punteggio ≥ 68 (`MAX_PER_LEAGUE`, `MAX_PER_LEAGUE_HARD`, `LEAGUE_EXTRA_MIN_SCORE`).
 Le probabilità sono mostrate al punto percentuale e sempre con intervallo (niente falsa precisione).
 
 ### Multiple

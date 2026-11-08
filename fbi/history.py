@@ -57,7 +57,7 @@ def _started(entry: dict, now: datetime) -> bool:
 def record_predictions(s: Settings, report: dict, now: datetime | None = None) -> None:
     now = now or datetime.now(timezone.utc)
     h = load(s)
-    day = report["analysis_date"]
+    day = report["analysis_date"] + ("" if report.get("horizon_days", 1) == 1 else "_settimana")
     prev = h["days"].get(day)
     if prev and (prev.get("verified") or _started(prev, now)):
         log.info("previsione del %s già bloccata (partite iniziate): non sovrascritta", day)

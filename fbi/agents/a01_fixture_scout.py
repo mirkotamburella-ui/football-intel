@@ -43,9 +43,12 @@ class FixtureScout(Agent):
     def analyze(self, ctx, inputs):
         s = ctx.settings
         today = ctx.today
+        horizon = s.horizon_days
+        last_day = today + timedelta(days=horizon - 1)
         raw: list[dict] = []
-        # ESPN usa giornate in fuso USA: per coprire 00:00–23:59 italiane servono ieri/oggi/domani
-        for d in (today - timedelta(days=1), today, today + timedelta(days=1)):
+        # ESPN usa giornate in fuso USA: per coprire 00:00–23:59 italiane serve anche il giorno prima e dopo
+        for i in range(-1, horizon + 1):
+            d = today + timedelta(days=i)
             try:
                 f = ctx.espn.scoreboard(d.strftime("%Y%m%d"))
                 self.add_source(src(f))
@@ -56,7 +59,7 @@ class FixtureScout(Agent):
         seen_ids, seen_keys, fixtures, dupes = set(), set(), [], 0
         for fx in raw:
             local = ctx.to_local(fx["kickoff_utc"])
-            if local.date() != today:
+            if not (today <= local.date() <= last_day):
                 continue
             key = (fx["home"]["name"].lower(), fx["away"]["name"].lower(), local.strftime("%Y%m%d%H"))
             if fx["event_id"] in seen_ids or key in seen_keys:
@@ -122,6 +125,8 @@ class FixtureScout(Agent):
         competitions = Counter(fx["competition"] for fx in fixtures)
         summary = {
             "date": today.isoformat(),
+            "date_to": last_day.isoformat(),
+            "horizon_days": horizon,
             "timezone": s.timezone,
             "total_found": len(fixtures),
             "duplicates_removed": dupes,

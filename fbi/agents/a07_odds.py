@@ -124,7 +124,7 @@ class OddsIntelligence(Agent):
         s = ctx.settings
         oa = ctx.odds_api
         day_start = ctx.now_utc
-        day_end = ctx.now_utc + timedelta(hours=30)
+        day_end = ctx.now_utc + timedelta(hours=24 * s.horizon_days + 6)
 
         def league_events(slug):
             return ctx.memo(f"oddsapi:{slug}", lambda: oa.league_odds(slug, day_start, day_end)) or []

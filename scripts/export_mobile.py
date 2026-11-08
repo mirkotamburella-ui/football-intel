@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import re
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -21,10 +20,10 @@ def safe_json(obj) -> str:
     return json.dumps(obj, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
 
-def main(out: Path) -> None:
-    report = json.loads((DATA / "latest.json").read_text(encoding="utf-8"))
+def main(out: Path, report_path: Path, history_path: Path | None, nav: str = "") -> None:
+    report = json.loads(report_path.read_text(encoding="utf-8"))
     try:
-        history = json.loads((DATA / "history.json").read_text(encoding="utf-8"))
+        history = json.loads(history_path.read_text(encoding="utf-8")) if history_path else None
     except (OSError, ValueError):
         history = None
     html = (WEB / "index.html").read_text(encoding="utf-8")
@@ -32,6 +31,12 @@ def main(out: Path) -> None:
     body = re.sub(r'<script src="app.js"></script>', "", body)
     css = (WEB / "style.css").read_text(encoding="utf-8")
     js = (WEB / "app.js").read_text(encoding="utf-8")
+    links = {"oggi": ("index.html", "Oggi"), "settimana": ("settimana.html", "Settimana")}
+    navhtml = ""
+    if nav:
+        navhtml = '<nav class="pages">' + "".join(
+            f'<a href="{h}" class="{"on" if k == nav else ""}">{t}</a>' for k, (h, t) in links.items()) + "</nav>"
+    body = body.replace('<div class="rg" role="note">', navhtml + '<div class="rg" role="note">', 1)
     page = f"""<title>Football Intelligence</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -47,4 +52,12 @@ def main(out: Path) -> None:
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]) if len(sys.argv) > 1 else DATA / "football-intel-mobile.html")
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("out", nargs="?", default=str(DATA / "football-intel-mobile.html"))
+    ap.add_argument("--report", default=str(DATA / "latest.json"))
+    ap.add_argument("--history", default=str(DATA / "history.json"))
+    ap.add_argument("--nav", default="", help="'oggi' o 'settimana': aggiunge i link tra le due pagine")
+    a = ap.parse_args()
+    main(Path(a.out), Path(a.report), Path(a.history) if a.history else None, a.nav)

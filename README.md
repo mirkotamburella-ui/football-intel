@@ -223,6 +223,13 @@ Attivazione (una volta sola):
 
 Ogni giro dura 1–2 minuti: circa 300 minuti al mese, nei limiti gratuiti di GitHub Actions.
 
+## Analisi della settimana
+
+`python -m fbi run --days 7` (o `HORIZON_DAYS=7`) analizza le partite dei prossimi 7 giorni con gli stessi 12 agenti e
+gli stessi controlli. Su GitHub: Actions → "Analisi automatica" → Run workflow → modo **settimana** (max 24 crediti
+The Odds API: un campionato costa uguale per 1 o 7 giorni). La pagina `settimana.html` si affianca a quella di oggi.
+Le quote dei giorni successivi cambieranno: la schedina va ricontrollata prima di ogni partita.
+
 ## Output su disco
 ```
 data/latest.json                      ultimo report (letto dalla dashboard)

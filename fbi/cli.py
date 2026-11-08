@@ -37,7 +37,8 @@ def setup_logging(settings, verbose: bool = False) -> None:
 
 def print_summary(r: dict) -> None:
     p = print
-    p(f"\n=== FOOTBALL BETTING INTELLIGENCE — {r['analysis_date']} (analisi delle {r['generated_at_local']} {r['timezone']}) ===")
+    period = r["analysis_date"] if r.get("horizon_days", 1) == 1 else f"{r['analysis_date']} → {r['date_to']}"
+    p(f"\n=== FOOTBALL BETTING INTELLIGENCE — {period} (analisi delle {r['generated_at_local']} {r['timezone']}) ===")
     p(f"Partite trovate: {r['matches_found']} | analizzate pre-match: {r['matches_analyzed']} | escluse: {r['matches_excluded']}")
     p(f"Competizioni: {len(r['competitions_monitored'])} | agenti attivi: {r['agents_active']}/{r['agents_total']} | durata {r['duration_s']}s")
     for name, title in (("main_accumulator", "MULTIPLA PRINCIPALE"), ("prudent_accumulator", "MULTIPLA ALTERNATIVA (prudente)")):
@@ -47,7 +48,7 @@ def print_summary(r: dict) -> None:
             p(f"  Non disponibile: {a.get('reason')}")
             continue
         for l in a["legs"]:
-            p(f"  {l['kickoff_local'][11:]}  {l['match']:<45.45} {l['label']:<26} @ {l['odds']:<5} p≈{l['p_est']:.0%}  score {l['score']['final']}")
+            p(f"  {l['kickoff_local'][5:]}  {l['match']:<45.45} {l['label']:<26} @ {l['odds']:<5} p≈{l['p_est']:.0%}  score {l['score']['final']}")
         lo, hi = a["joint_probability_range_90"]
         p(f"  Quota totale {a['total_odds']} | probabilità stimata {a['joint_probability']:.1%} (90%: {lo:.1%}–{hi:.1%}) "
           f"| ritorno lordo potenziale su {a['stake_eur']:.0f} €: {a['potential_gross_return_eur']} €")
@@ -86,6 +87,8 @@ def cmd_run(args, refresh=False):
     s = get_settings()
     if args.max_matches is not None:
         s.max_matches = args.max_matches
+    if getattr(args, "days", None):
+        s.horizon_days = max(1, min(14, args.days))
     setup_logging(s, args.verbose)
     old = None
     if refresh:
@@ -166,6 +169,7 @@ def main(argv=None) -> int:
         p = sub.add_parser(name)
         p.add_argument("--max-matches", type=int, default=None, help="limita il numero di partite (test rapidi)")
         p.add_argument("--offline", action="store_true", help="usa solo la cache locale (nessuna richiesta di rete)")
+        p.add_argument("--days", type=int, default=None, help="giorni da analizzare a partire da oggi (es. 7 = settimana)")
     p = sub.add_parser("verify")
     p.add_argument("--days", nargs="*", default=None)
     p = sub.add_parser("serve")

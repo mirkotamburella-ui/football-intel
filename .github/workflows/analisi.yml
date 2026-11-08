@@ -2,7 +2,8 @@
 # Gira sui server di GitHub (gratis), senza computer acceso e senza usare Claude.
 #
 # Budget The Odds API (piano gratuito: 500 crediti/mese): 2 analisi al giorno da max 8 crediti
-# = 480 crediti/mese. Orari in UTC; con l'ora solare italiana (UTC+1):
+# (~480/mese). L'analisi "settimana" (avvio manuale) usa max 24 crediti: un campionato costa uguale
+# per 1 o 7 giorni. Orari in UTC; con l'ora solare italiana (UTC+1):
 #   08:30 analisi completa · 17:30 aggiornamento prima delle partite serali · 23:45 verifica risultati
 # (con l'ora legale scattano un'ora più tardi; GitHub può ritardarli di qualche minuto).
 name: Analisi automatica
@@ -15,13 +16,13 @@ on:
   workflow_dispatch:      # pulsante "Run workflow" per lanciarla a mano
     inputs:
       modo:
-        description: "analisi = nuova analisi (usa crediti) · pagina = ripubblica l'ultima analisi senza crediti"
+        description: "analisi = partite di oggi (8 crediti) · settimana = prossimi 7 giorni (24 crediti) · pagina = ripubblica senza crediti"
         type: choice
-        options: [analisi, pagina]
+        options: [analisi, settimana, pagina]
         default: analisi
 
 permissions:
-  contents: write   # salva lo storico delle previsioni nel branch "data"
+  contents: write   # salva storico e ultime analisi nel branch "data"
   pages: write
   id-token: write
 
@@ -32,7 +33,7 @@ concurrency:
 jobs:
   analisi:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -41,6 +42,7 @@ jobs:
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
       API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
       ODDS_API_MAX_CREDITS_PER_RUN: "8"
+      MODO: ${{ github.event.inputs.modo }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,48 +53,55 @@ jobs:
       - name: Installa dipendenze
         run: pip install -r requirements.txt
 
-      - name: Recupera storico e ultima analisi
+      - name: Recupera storico e ultime analisi
         run: |
-          mkdir -p data
+          mkdir -p data week
           if git fetch --depth 1 origin data 2>/dev/null; then
             git show FETCH_HEAD:history.json > data/history.json || rm -f data/history.json
             git show FETCH_HEAD:latest.json > data/latest.json || rm -f data/latest.json
+            git show FETCH_HEAD:latest_week.json > week/latest.json || rm -f week/latest.json
           fi
 
       - name: Verifica risultati delle partite concluse
         run: python -m fbi verify || echo "verifica non completata (riprova al prossimo giro)"
 
       - name: Analisi (12 agenti)
-        # il giro serale (22 UTC) fa solo la verifica dei risultati, senza consumare crediti
         run: |
           H=$(date -u +%H)
-          if [ "${{ github.event.inputs.modo }}" = "pagina" ] && [ -f data/latest.json ]; then echo "solo pagina";
-          elif [ "$H" = "22" ] && [ -f data/latest.json ]; then echo "solo verifica";
-          elif [ "$H" = "07" ] || [ ! -f data/latest.json ]; then python -m fbi run;
+          if [ "$MODO" = "pagina" ]; then echo "solo pagina"
+          elif [ "$MODO" = "settimana" ]; then
+            cp data/history.json week/history.json 2>/dev/null || true
+            FBI_DATA_DIR=week HORIZON_DAYS=7 ODDS_API_MAX_CREDITS_PER_RUN=24 python -m fbi run
+            cp week/history.json data/history.json
+          elif [ "$H" = "22" ] && [ -f data/latest.json ]; then echo "solo verifica (nessun credito)"
+          elif [ "$H" = "07" ] || [ ! -f data/latest.json ]; then python -m fbi run
           else python -m fbi refresh; fi
 
-      - name: Crea la pagina
+      - name: Crea le pagine
         run: |
           mkdir -p site
-          python scripts/export_mobile.py site/index.html
+          python scripts/export_mobile.py site/index.html --report data/latest.json --history data/history.json --nav oggi
+          if [ -f week/latest.json ]; then
+            python scripts/export_mobile.py site/settimana.html --report week/latest.json --history data/history.json --nav settimana
+          fi
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
-      - name: Salva lo storico nel branch "data"
+      - name: Salva storico e ultime analisi nel branch "data"
         run: |
-          cp data/history.json /tmp/history.json
-          cp data/latest.json /tmp/latest.json
+          mkdir -p /tmp/state
+          cp data/history.json data/latest.json /tmp/state/
+          [ -f week/latest.json ] && cp week/latest.json /tmp/state/latest_week.json || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan state-tmp
           git rm -rf --quiet .
-          git clean -fdq -e data
-          cp /tmp/history.json history.json
-          cp /tmp/latest.json latest.json
-          git add history.json latest.json
-          git commit -q -m "storico $(date -u +%Y-%m-%dT%H:%MZ)"
+          git clean -fdq
+          cp /tmp/state/* .
+          git add -A
+          git commit -q -m "stato $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f origin HEAD:data
 
       - id: deploy

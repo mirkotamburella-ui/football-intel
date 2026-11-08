@@ -105,6 +105,8 @@ def build_report(ctx: RunContext, reports: dict, timeline: list[dict], started: 
         "system_version": __version__,
         "run_id": ctx.run_id,
         "analysis_date": ctx.today.isoformat(),
+        "horizon_days": ctx.settings.horizon_days,
+        "date_to": a1.get("date_to", ctx.today.isoformat()),
         "generated_at_utc": utc_iso(ctx.now_utc),
         "generated_at_local": ctx.now_utc.astimezone(ctx.tz).strftime("%Y-%m-%d %H:%M"),
         "timezone": ctx.settings.timezone,

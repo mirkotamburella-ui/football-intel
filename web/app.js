@@ -3,6 +3,14 @@
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// "2026-11-08 16:30" → "16:30" (analisi di oggi) oppure "dom 08/11 16:30" (analisi della settimana)
+const GG = ["dom", "lun", "mar", "mer", "gio", "ven", "sab"];
+function when(k) {
+  if (!k) return "";
+  if (!state.report || (state.report.horizon_days || 1) === 1) return k.slice(11);
+  const d = new Date(k.slice(0, 10) + "T12:00:00");
+  return `${GG[d.getDay()]} ${k.slice(8, 10)}/${k.slice(5, 7)} ${k.slice(11)}`;
+}
 const pct = (p, d = 0) => (p == null ? "n.d." : (p * 100).toFixed(d) + "%");
 const sgn = (x) => (x == null ? "n.d." : (x >= 0 ? "+" : "") + (x * 100).toFixed(1) + "%");
 const state = { report: null, history: null, filter: "all", q: "", onlyBook: false };
@@ -83,7 +91,7 @@ function renderToday(r) {
   $("#tab-today").innerHTML = `
     <div class="kpis">
       <div class="kpi"><div class="v">${r.matches_analyzed}</div><div class="l">partite analizzate (pre-match)</div></div>
-      <div class="kpi"><div class="v">${r.matches_found}</div><div class="l">partite trovate oggi</div></div>
+      <div class="kpi"><div class="v">${r.matches_found}</div><div class="l">partite trovate ${(r.horizon_days || 1) > 1 ? "nella settimana" : "oggi"}</div></div>
       <div class="kpi"><div class="v">${r.competitions_monitored.length}</div><div class="l">competizioni</div></div>
       <div class="kpi"><div class="v">${r.agents_active}/${r.agents_total}</div><div class="l">agenti attivi</div></div>
     </div>
@@ -104,7 +112,7 @@ function renderToday(r) {
     <p class="muted">Richieste HTTP: ${r.http_stats.requests} · da cache: ${r.http_stats.cache_hits} · errori: ${r.http_stats.errors}</p></div>
     <details><summary>Partite escluse (${r.excluded_matches.length})</summary>
       <div class="card scroll"><table><tr><th>Ora</th><th>Partita</th><th>Motivo</th></tr>
-      ${r.excluded_matches.map((x) => `<tr><td>${esc(x.kickoff_local.slice(11))}</td><td>${esc(x.match)}<div class="muted small">${esc(x.competition)}</div></td><td>${esc(x.reason)}</td></tr>`).join("")}
+      ${r.excluded_matches.map((x) => `<tr><td>${esc(when(x.kickoff_local))}</td><td>${esc(x.match)}<div class="muted small">${esc(x.competition)}</div></td><td>${esc(x.reason)}</td></tr>`).join("")}
       </table></div></details>
     <h2>Avvertenze</h2><div class="card small"><ul class="clean">${r.disclaimer.map((d) => `<li>${esc(d)}</li>`).join("")}</ul></div>`;
 }
@@ -112,7 +120,7 @@ function renderToday(r) {
 function selCard(s) {
   const status = s.qc_passed ? `<span class="pill ok">Conforme</span>` : `<span class="pill bad">Non consigliata</span>`;
   return `<div class="card tap" data-sel="${esc(s.event_id)}|${esc(s.key)}">
-    <div class="row"><h3>${esc(s.match)}</h3><span class="muted small num">${esc(s.kickoff_local.slice(11))}</span></div>
+    <div class="row"><h3>${esc(s.match)}</h3><span class="muted small num">${esc(when(s.kickoff_local))}</span></div>
     <div class="muted small">${esc(s.competition)}</div>
     <div class="row" style="margin-top:8px"><span><b>${esc(s.label)}</b> @ <b class="num">${s.odds}</b> <span class="muted small">${esc(s.bookmaker)}</span></span>
       <span class="pill acc num">AI ${s.score.final}</span></div>
@@ -130,7 +138,7 @@ function accBlock(title, a, stake) {
   if (a.status !== "ok") return `<h2>${title}</h2><div class="empty"><b>Non disponibile.</b> ${esc(a.reason)}</div>`;
   const absent = a.legs.filter((l) => mark(l.event_id) === "no").length;
   const legs = a.legs.map((l) => `<div class="leg tap ${mark(l.event_id) === "no" ? "absent" : ""}" data-sel="${esc(l.event_id)}|${esc(l.key)}">
-      <div><b>${esc(l.match)}</b><div class="muted small">${esc(l.competition)} · ${esc(l.kickoff_local.slice(11))}</div>
+      <div><b>${esc(l.match)}</b><div class="muted small">${esc(l.competition)} · ${esc(when(l.kickoff_local))}</div>
       <div class="small">${esc(l.label)} · p ${pct(l.p_est)} · AI ${l.score.final} · ${esc(l.bookmaker)}${minOdds(l) ? ` · conviene da ${minOdds(l).toFixed(2)}` : ""}</div>
       ${mark(l.event_id) === "no" ? `<div class="small bad-text">Non disponibile su ${BOOK}: la multipla così non è giocabile</div>` : ""}</div>
       <div class="big num">${l.odds}</div></div>`).join("");
@@ -179,7 +187,7 @@ function renderMatches(r) {
     ${cards.map((c) => {
       const b = c.recommended || c.best_candidate;
       return `<div class="card tap" data-match="${esc(c.event_id)}">
-        <div class="row"><h3>${esc(c.match)}</h3><span class="muted small num">${esc(c.kickoff_local.slice(11))}</span></div>
+        <div class="row"><h3>${esc(c.match)}</h3><span class="muted small num">${esc(when(c.kickoff_local))}</span></div>
         <div class="muted small">${esc(c.competition)}</div>
         ${b ? `<div class="row small" style="margin-top:6px"><span>${c.recommended ? "Consigliata" : "Migliore (non conforme)"}: <b>${esc(b.label)}</b> @ ${b.odds}</span><span class="pill acc">AI ${b.score.final}</span></div>`
             : `<div class="small muted" style="margin-top:6px">Nessuna quota/modello disponibile</div>`}
@@ -281,7 +289,8 @@ function renderHistory(h) {
 /* --------------------------------------------------------------- SETUP */
 function renderAll() {
   const r = state.report;
-  $("#meta").textContent = `Analisi del ${r.analysis_date} · ${r.generated_at_local.slice(11)} (${r.timezone})${r.run_type === "refresh" ? " · aggiornamento" : ""}`;
+  const period = (r.horizon_days || 1) > 1 ? `Settimana ${r.analysis_date.slice(8, 10)}/${r.analysis_date.slice(5, 7)}–${r.date_to.slice(8, 10)}/${r.date_to.slice(5, 7)}` : `Analisi del ${r.analysis_date}`;
+  $("#meta").textContent = `${period} · aggiornata alle ${r.generated_at_local.slice(11)}${r.run_type === "refresh" ? " · aggiornamento" : ""}`;
   renderToday(r); renderAccas(r); renderMatches(r); renderAgents(r); renderHistory(state.history);
 }
 

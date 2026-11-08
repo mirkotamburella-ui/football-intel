@@ -75,6 +75,7 @@ class Settings:
     # seconda fonte (The Odds API / API-Football) è configurata; "always" = sempre; "never" = mai
     fixture_confirmation: str = "auto"
     max_matches: int = 0  # 0 = nessun limite
+    horizon_days: int = 1  # 1 = solo oggi; 7 = analisi della settimana
 
     # --- soglie di qualità (Quality Control) ---
     min_selection_score: float = 60.0
@@ -158,6 +159,7 @@ def get_settings(load_env_file: bool = True) -> Settings:
         require_preferred_bookmaker=_s("REQUIRE_PREFERRED_BOOKMAKER", "true").lower() in ("1", "true", "yes", "si"),
         fixture_confirmation=_s("FIXTURE_CONFIRMATION", "auto").lower(),
         max_matches=_i("MAX_MATCHES", 0),
+        horizon_days=max(1, min(14, _i("HORIZON_DAYS", 1))),
         min_selection_score=_f("MIN_SELECTION_SCORE", 60.0),
         min_ev=_f("MIN_EV", 0.0),
         min_leg_odds=_f("MIN_LEG_ODDS", 1.20),

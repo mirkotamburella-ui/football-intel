@@ -1,17 +1,16 @@
 # Analisi automatica + pubblicazione della dashboard su GitHub Pages.
 # Gira sui server di GitHub (gratis), senza computer acceso e senza usare Claude.
-# Orari in UTC: con l'ora solare italiana (UTC+1) corrispondono a
-# 08:30 analisi, 12:30 / 15:30 / 18:30 / 21:00 aggiornamenti, 23:45 verifica risultati.
-# (Con l'ora legale scattano un'ora più tardi.) GitHub può ritardarli di qualche minuto.
+#
+# Budget The Odds API (piano gratuito: 500 crediti/mese): 2 analisi al giorno da max 8 crediti
+# = 480 crediti/mese. Orari in UTC; con l'ora solare italiana (UTC+1):
+#   08:30 analisi completa · 17:30 aggiornamento prima delle partite serali · 23:45 verifica risultati
+# (con l'ora legale scattano un'ora più tardi; GitHub può ritardarli di qualche minuto).
 name: Analisi automatica
 
 on:
   schedule:
     - cron: "30 7 * * *"
-    - cron: "30 11 * * *"
-    - cron: "30 14 * * *"
-    - cron: "30 17 * * *"
-    - cron: "0 20 * * *"
+    - cron: "30 16 * * *"
     - cron: "45 22 * * *"
   workflow_dispatch: {}   # pulsante "Run workflow" per lanciarla a mano
 
@@ -35,6 +34,7 @@ jobs:
       TZ: Europe/Rome
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
       API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+      ODDS_API_MAX_CREDITS_PER_RUN: "8"
     steps:
       - uses: actions/checkout@v4
 
@@ -45,19 +45,24 @@ jobs:
       - name: Installa dipendenze
         run: pip install -r requirements.txt
 
-      - name: Recupera lo storico delle previsioni
+      - name: Recupera storico e ultima analisi
         run: |
           mkdir -p data
           if git fetch --depth 1 origin data 2>/dev/null; then
             git show FETCH_HEAD:history.json > data/history.json || rm -f data/history.json
+            git show FETCH_HEAD:latest.json > data/latest.json || rm -f data/latest.json
           fi
 
       - name: Verifica risultati delle partite concluse
         run: python -m fbi verify || echo "verifica non completata (riprova al prossimo giro)"
 
       - name: Analisi (12 agenti)
+        # il giro serale (22 UTC) fa solo la verifica dei risultati, senza consumare crediti
         run: |
-          if [ "$(date -u +%H)" = "07" ]; then python -m fbi run; else python -m fbi refresh; fi
+          H=$(date -u +%H)
+          if [ "$H" = "22" ] && [ -f data/latest.json ]; then echo "solo verifica"; 
+          elif [ "$H" = "07" ] || [ ! -f data/latest.json ]; then python -m fbi run;
+          else python -m fbi refresh; fi
 
       - name: Crea la pagina
         run: |
@@ -71,13 +76,15 @@ jobs:
       - name: Salva lo storico nel branch "data"
         run: |
           cp data/history.json /tmp/history.json
+          cp data/latest.json /tmp/latest.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan state-tmp
           git rm -rf --quiet .
           git clean -fdq -e data
           cp /tmp/history.json history.json
-          git add history.json
+          cp /tmp/latest.json latest.json
+          git add history.json latest.json
           git commit -q -m "storico $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f origin HEAD:data
 

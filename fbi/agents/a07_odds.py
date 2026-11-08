@@ -106,9 +106,23 @@ class OddsIntelligence(Agent):
         def league_events(slug):
             return ctx.memo(f"oddsapi:{slug}", lambda: oa.league_odds(slug, day_start, day_end)) or []
 
-        # priorità per i mercati extra a pagamento: prima i campionati più affidabili
-        order = sorted(fixtures, key=lambda f: (tier(f.get("league_slug")), f["kickoff_utc"]))
-        extra_allowed = {f["event_id"] for f in order[: max(0, s.odds_api_max_credits // 6)]} if oa.enabled else set()
+        # Budget crediti The Odds API: prima le quote h2h/totals dei campionati più importanti e con
+        # più partite (in sequenza, per rispettare il tetto per run); i mercati extra (Goal/No Goal,
+        # DNB, doppia chance) solo con i crediti avanzati.
+        extra_allowed: set[str] = set()
+        if oa.enabled:
+            counts: dict[str, int] = {}
+            for f in fixtures:
+                if f.get("league_slug") in SPORT_KEYS:
+                    counts[f["league_slug"]] = counts.get(f["league_slug"], 0) + 1
+            for slug in sorted(counts, key=lambda x: (tier(x), -counts[x])):
+                league_events(slug)
+            self.leagues_with_odds_api = [x for x in counts if ctx.memo(f"oddsapi:{x}", lambda: [])]
+            per_extra = 4 * len(s.odds_api_regions.split(","))
+            n_extra = max(0, (s.odds_api_max_credits - oa.credits_used) // per_extra)
+            order = sorted((f for f in fixtures if f.get("league_slug") in self.leagues_with_odds_api),
+                           key=lambda f: (tier(f.get("league_slug")), f["kickoff_utc"]))
+            extra_allowed = {f["event_id"] for f in order[:n_extra]}
 
         def one(fx):
             quotes = []
@@ -145,6 +159,7 @@ class OddsIntelligence(Agent):
             "with_odds": sum(1 for m in matches.values() if m.get("available")),
             "odds_api_enabled": oa.enabled,
             "odds_api_credits_used": oa.credits_used,
+            "odds_api_leagues": sorted(getattr(self, "leagues_with_odds_api", [])),
             "odds_api_remaining": oa.remaining,
             "devig_method": "power (Σ p_i^k = 1), consenso = media tra bookmaker",
         }, matches

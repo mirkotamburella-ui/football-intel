@@ -31,7 +31,7 @@ def main(out: Path, report_path: Path, history_path: Path | None, nav: str = "")
     body = re.sub(r'<script src="app.js"></script>', "", body)
     css = (WEB / "style.css").read_text(encoding="utf-8")
     js = (WEB / "app.js").read_text(encoding="utf-8")
-    links = {"oggi": ("index.html", "Oggi"), "settimana": ("settimana.html", "Settimana")}
+    links = {"oggi": ("index.html", "Oggi"), "settimana": ("settimana.html", "Prossimi giorni")}
     navhtml = ""
     if nav:
         navhtml = '<nav class="pages">' + "".join(

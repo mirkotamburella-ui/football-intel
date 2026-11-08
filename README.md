@@ -226,7 +226,8 @@ Ogni giro dura 1–2 minuti: circa 300 minuti al mese, nei limiti gratuiti di Gi
 ## Analisi della settimana
 
 `python -m fbi run --days 7` (o `HORIZON_DAYS=7`) analizza le partite dei prossimi 7 giorni con gli stessi 12 agenti e
-gli stessi controlli. Su GitHub: Actions → "Analisi automatica" → Run workflow → modo **settimana** (max 24 crediti
+gli stessi controlli. Su GitHub: Actions → "Analisi automatica" → Run workflow → modo **settimana**, giorni **3** (default; molti bookmaker,
+come Sisal, aprono il palinsesto pochi giorni prima), 5 o 7 (max 24 crediti
 The Odds API: un campionato costa uguale per 1 o 7 giorni). La pagina `settimana.html` si affianca a quella di oggi.
 Le quote dei giorni successivi cambieranno: la schedina va ricontrollata prima di ogni partita.
 

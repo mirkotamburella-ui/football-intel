@@ -16,10 +16,15 @@ on:
   workflow_dispatch:      # pulsante "Run workflow" per lanciarla a mano
     inputs:
       modo:
-        description: "analisi = partite di oggi (8 crediti) · settimana = prossimi 7 giorni (24 crediti) · pagina = ripubblica senza crediti"
+        description: "analisi = partite di oggi (8 crediti) · settimana = prossimi giorni (24 crediti) · pagina = ripubblica senza crediti"
         type: choice
         options: [analisi, settimana, pagina]
         default: analisi
+      giorni:
+        description: "solo per 'settimana': quanti giorni analizzare da oggi (molti bookmaker aprono il palinsesto ~3 giorni prima)"
+        type: choice
+        options: ["3", "5", "7"]
+        default: "3"
 
 permissions:
   contents: write   # salva storico e ultime analisi nel branch "data"
@@ -43,6 +48,7 @@ jobs:
       API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
       ODDS_API_MAX_CREDITS_PER_RUN: "8"
       MODO: ${{ github.event.inputs.modo }}
+      GIORNI: ${{ github.event.inputs.giorni || '3' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +77,7 @@ jobs:
           if [ "$MODO" = "pagina" ]; then echo "solo pagina"
           elif [ "$MODO" = "settimana" ]; then
             cp data/history.json week/history.json 2>/dev/null || true
-            FBI_DATA_DIR=week HORIZON_DAYS=7 ODDS_API_MAX_CREDITS_PER_RUN=24 python -m fbi run
+            FBI_DATA_DIR=week HORIZON_DAYS=$GIORNI ODDS_API_MAX_CREDITS_PER_RUN=24 python -m fbi run
             cp week/history.json data/history.json
           elif [ "$H" = "22" ] && [ -f data/latest.json ]; then echo "solo verifica (nessun credito)"
           elif [ "$H" = "07" ] || [ ! -f data/latest.json ]; then python -m fbi run

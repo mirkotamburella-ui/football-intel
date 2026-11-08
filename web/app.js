@@ -28,6 +28,13 @@ function relPill(level) {
   const cls = level === "Alta" ? "ok" : level === "Media" ? "warn" : "bad";
   return `<span class="pill ${cls}">Affidabilità ${esc(level || "n.d.")}</span>`;
 }
+// quota minima per avere valore (EV ≥ 0); calcolata qui se il report è precedente al campo
+function minOdds(s) {
+  if (s.min_odds_for_value) return s.min_odds_for_value;
+  if (!s.p_est) return null;
+  const q = s.key && s.key.startsWith("DNB|") ? (1 - (s.p_push || 0)) / s.p_est : 1 / s.p_est;
+  return Math.ceil(q * 100) / 100;
+}
 function verPill(v) {
   if (!v) return "";
   return v.confirmed ? `<span class="pill ok">Verificata (${v.sources.length} fonti)</span>`
@@ -82,6 +89,7 @@ function selCard(s) {
     <div class="muted small">${esc(s.competition)}</div>
     <div class="row" style="margin-top:8px"><span><b>${esc(s.label)}</b> @ <b class="num">${s.odds}</b> <span class="muted small">${esc(s.bookmaker)}</span></span>
       <span class="pill acc num">AI ${s.score.final}</span></div>
+    ${minOdds(s) ? `<div class="small" style="margin-top:6px">Sul tuo bookmaker conviene solo a quota <b class="num">≥ ${minOdds(s).toFixed(2)}</b></div>` : ""}
     <div class="row small" style="margin-top:6px"><span>Prob. stimata <b class="num">${pct(s.p_est)}</b> <span class="muted">(${pct(s.p_est_range_90[0])}–${pct(s.p_est_range_90[1])})</span></span><span class="num">EV ${sgn(s.ev)}</span></div>
     <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${status}${relPill(s.reliability_level)}${riskPill(s.risk_level)}${verPill(s.fixture_verification)}</div>
     ${!s.qc_passed ? `<div class="small muted" style="margin-top:6px">Motivo: ${esc(s.qc_failures.slice(0, 2).join("; "))}</div>` : ""}
@@ -94,7 +102,7 @@ function accBlock(title, a, stake) {
   if (a.status !== "ok") return `<h2>${title}</h2><div class="empty"><b>Non disponibile.</b> ${esc(a.reason)}</div>`;
   const legs = a.legs.map((l) => `<div class="leg tap" data-sel="${esc(l.event_id)}|${esc(l.key)}">
       <div><b>${esc(l.match)}</b><div class="muted small">${esc(l.competition)} · ${esc(l.kickoff_local.slice(11))}</div>
-      <div class="small">${esc(l.label)} · p ${pct(l.p_est)} · AI ${l.score.final} · ${esc(l.bookmaker)}</div></div>
+      <div class="small">${esc(l.label)} · p ${pct(l.p_est)} · AI ${l.score.final} · ${esc(l.bookmaker)}${minOdds(l) ? ` · conviene da ${minOdds(l).toFixed(2)}` : ""}</div></div>
       <div class="big num">${l.odds}</div></div>`).join("");
   return `<h2>${title}</h2><div class="card">${legs}
     <div class="stats">
@@ -161,7 +169,8 @@ function matchDetail(eid, focusKey) {
       <div class="stats"><div><b>${pct(s.p_est)}</b><span>prob. stimata (90%: ${pct(s.p_est_range_90[0])}–${pct(s.p_est_range_90[1])})</span></div>
         <div><b>${s.score.final}</b><span>punteggio AI (base ${s.score.base} − contrarian ${s.score.contrarian_penalty})</span></div>
         <div><b>${pct(s.p_model)}</b><span>modello statistico</span></div><div><b>${pct(s.p_market_fair)}</b><span>mercato (senza margine)</span></div>
-        <div><b>${sgn(s.ev)}</b><span>Expected Value</span></div><div><b>${esc(s.risk_level || "n.d.")}</b><span>livello di rischio</span></div></div>
+        <div><b>${sgn(s.ev)}</b><span>Expected Value</span></div>
+        <div><b>≥ ${minOdds(s) ? minOdds(s).toFixed(2) : "n.d."}</b><span>quota minima per avere valore (es. su Sisal)</span></div><div><b>${esc(s.risk_level || "n.d.")}</b><span>livello di rischio</span></div></div>
       <div style="margin-top:8px">${s.qc_passed ? '<span class="pill ok">Supera il controllo qualità</span>' : `<span class="pill bad">Non conforme</span><ul class="clean small">${s.qc_failures.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>`}</div></div>
       <h3>Punteggio (0–100)</h3>${s.score.components.map((k) => `<div class="comp"><div class="row"><span>${esc(k.name)} <span class="muted">(${esc(k.agent)})</span></span><span class="num">${k.points.toFixed(1)}/${k.max}</span></div>
         <div class="bar"><i style="width:${(100 * k.points / k.max).toFixed(0)}%"></i></div><div class="small muted">${esc(k.explanation)}</div></div>`).join("")}

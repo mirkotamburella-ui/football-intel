@@ -8,6 +8,16 @@ from ..scoring import score_selection
 from .base import Agent
 
 
+def min_odds(c: dict) -> float | None:
+    """Quota di pareggio dell'EV: p·q = 1 (DNB: p·q + p_rimborso = 1). Arrotondata per eccesso al centesimo."""
+    import math
+    p = c["p_est"]
+    if p <= 0:
+        return None
+    q = (1 - (c.get("p_push") or 0)) / p if c["key"].startswith("DNB|") else 1 / p
+    return math.ceil(q * 100) / 100
+
+
 def rationale(sel: dict, a: dict) -> list[str]:
     eid, key = sel["event_id"], sel["key"]
     form, offdef, mth, mot = (a[k]["matches"].get(eid, {}) for k in ("A02", "A03", "A08", "A06"))
@@ -34,7 +44,7 @@ def rationale(sel: dict, a: dict) -> list[str]:
         if m.get("rank"):
             out.append(f"{m['team']}: {m['rank']}° con {m['points']} punti" + (f" – {', '.join(m['objectives'])}" if m.get("objectives") else ""))
     out.append(f"Probabilità stimata {sel['p_est']:.0%} (intervallo 90%: {sel['p_est_range_90'][0]:.0%}–{sel['p_est_range_90'][1]:.0%}), "
-               f"EV {sel['ev']:+.1%} alla quota {sel['odds']}")
+               f"EV {sel['ev']:+.1%} alla quota {sel['odds']}; conviene solo a quota ≥ {sel['min_odds_for_value']}")
     return out
 
 
@@ -65,6 +75,8 @@ class FinalBettingStrategist(Agent):
                     **{k: c[k] for k in ("key", "label", "market", "odds", "bookmaker", "preferred_bookmaker", "odds_source", "odds_fetched_at",
                                          "best_odds", "best_bookmaker", "p_model", "p_market_fair", "p_est", "p_est_range_90", "ev", "edge_pp", "p_push")},
                     "p_display": round_prob(c["p_est"]),
+                    # quota minima per avere EV ≥ 0 con la probabilità stimata (per bookmaker non coperti, es. Sisal)
+                    "min_odds_for_value": min_odds(c),
                     "score": sc,
                     "risk_level": rsel.get(c["key"], {}).get("risk_level"),
                     "reliability_level": risk.get("reliability_level"), "data_quality": risk.get("data_quality"),

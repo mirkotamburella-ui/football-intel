@@ -12,7 +12,13 @@ on:
     - cron: "30 7 * * *"
     - cron: "30 16 * * *"
     - cron: "45 22 * * *"
-  workflow_dispatch: {}   # pulsante "Run workflow" per lanciarla a mano
+  workflow_dispatch:      # pulsante "Run workflow" per lanciarla a mano
+    inputs:
+      modo:
+        description: "analisi = nuova analisi (usa crediti) · pagina = ripubblica l'ultima analisi senza crediti"
+        type: choice
+        options: [analisi, pagina]
+        default: analisi
 
 permissions:
   contents: write   # salva lo storico delle previsioni nel branch "data"
@@ -60,7 +66,8 @@ jobs:
         # il giro serale (22 UTC) fa solo la verifica dei risultati, senza consumare crediti
         run: |
           H=$(date -u +%H)
-          if [ "$H" = "22" ] && [ -f data/latest.json ]; then echo "solo verifica"; 
+          if [ "${{ github.event.inputs.modo }}" = "pagina" ] && [ -f data/latest.json ]; then echo "solo pagina";
+          elif [ "$H" = "22" ] && [ -f data/latest.json ]; then echo "solo verifica";
           elif [ "$H" = "07" ] || [ ! -f data/latest.json ]; then python -m fbi run;
           else python -m fbi refresh; fi
 

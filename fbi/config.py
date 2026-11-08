@@ -20,7 +20,10 @@ MAX_STAKE_EUR = 10.0
 # Bookmaker con concessione ADM in Italia (da verificare sul sito ADM: l'elenco cambia).
 # Chiavi come normalizzate dai provider: ESPN "Bet 365" → bet365; The Odds API usa le sue chiavi.
 # DraftKings (quote ESPN) opera solo negli USA: usato per il consenso di mercato, non come quota giocabile.
-DEFAULT_BOOKMAKERS = ("bet365", "williamhill", "unibet_eu", "betfair_ex_eu", "sport888", "betsson", "leovegas")
+# Chiavi verificate sull'elenco ufficiale di The Odds API (regione "eu"): unibet_it e codere_it sono le
+# versioni con licenza italiana. Sisal, Snai, Eurobet, Lottomatica non sono coperti da nessun provider:
+# per loro la dashboard indica la "quota minima" sopra la quale la selezione conviene.
+DEFAULT_BOOKMAKERS = ("unibet_it", "codere_it", "bet365", "williamhill", "betfair_ex_eu", "sport888", "betsson", "leovegas_se")
 
 
 def load_dotenv(path: Path | None = None) -> None:

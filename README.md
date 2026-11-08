@@ -101,8 +101,11 @@ di mercato). Con le sole quote Bet365, il cui margine sull'1X2 è spesso del 5�
 abbia EV positivo: **per un uso reale si consiglia `ODDS_API_KEY`**, che permette di confrontare più
 bookmaker autorizzati.
 
-**Bookmaker "giocabili"**: `PREFERRED_BOOKMAKERS` (default: bet365, williamhill, unibet_eu, betfair_ex_eu,
-sport888, betsson, leovegas). La quota usata è la migliore tra questi; l'elenco va verificato sul sito ADM.
+**Bookmaker "giocabili"**: `PREFERRED_BOOKMAKERS` (default: unibet_it, codere_it, bet365, williamhill,
+betfair_ex_eu, sport888, betsson, leovegas_se). La quota usata è la migliore tra questi; l'elenco va verificato sul sito ADM.
+Sisal, Snai, Eurobet e Lottomatica non sono coperti da nessun provider di quote: per questo ogni selezione
+riporta la **quota minima** sopra la quale conviene (`1 / probabilità stimata`). Si confronta con la quota del
+proprio bookmaker e si scarta la selezione se è più bassa o se la partita non è in palinsesto.
 
 ---
 

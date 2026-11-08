@@ -163,6 +163,17 @@ class QualityControl(unittest.TestCase):
         self.assertIn("campionato poco affidabile", risk)
 
 
+class MinOdds(unittest.TestCase):
+    def test_breakeven(self):
+        from fbi.agents.a12_strategist import min_odds
+        from fbi.stats.odds_math import ev, ev_dnb
+        q = min_odds({"key": "1X2|AWAY", "p_est": 0.41})
+        self.assertGreaterEqual(ev(0.41, q), 0)
+        self.assertLess(ev(0.41, q - 0.01), 0)
+        d = min_odds({"key": "DNB|HOME", "p_est": 0.5, "p_push": 0.25})
+        self.assertAlmostEqual(ev_dnb(0.5, 0.25, d), 0, places=6)
+
+
 class FixtureVerification(unittest.TestCase):
     def ctx(self, odds=False, mode="auto"):
         st = Settings()

@@ -34,6 +34,9 @@ def main(out: Path) -> None:
     js = (WEB / "app.js").read_text(encoding="utf-8")
     page = f"""<title>Football Intelligence</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
 <style>{css}</style>
 {body}
 <script>document.body.classList.add("embedded");window.FBI_EMBED={{"report":{safe_json(report)},"history":{safe_json(history)}}};</script>

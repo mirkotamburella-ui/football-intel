@@ -192,6 +192,23 @@ API JSON: `/api/latest`, `/api/history`, `/api/reports`, `/api/reports/<run_id>`
 08:30 analisi completa (passi 1–7) · ogni ora 11–22 refresh di quote e formazioni (passo 8) · 23:50 e 08:00
 verifica dei risultati (passo 9). In alternativa `python -m fbi daemon --at 08:30 --refresh-every 60`.
 
+## Aggiornamento automatico gratuito (GitHub Actions + GitHub Pages)
+
+`.github/workflows/analisi.yml` esegue tutto sui server di GitHub, senza computer acceso e senza usare Claude:
+alle 08:30 analisi completa, alle 12:30, 15:30, 18:30 e 21:00 aggiornamento di quote e formazioni, alle 23:45
+verifica dei risultati (ora solare italiana; con l'ora legale un'ora dopo). Ogni giro verifica le partite
+concluse, rifà l'analisi, salva lo storico nel branch `data` e pubblica la dashboard su
+`https://<utente>.github.io/football-intel/` (pagina statica con i dati incorporati, `noindex`).
+
+Attivazione (una volta sola):
+1. Sul piano GitHub gratuito Pages richiede un repository **pubblico** (Settings → General → Change visibility).
+   Le chiavi API non finiscono mai nel codice: vanno in Settings → Secrets and variables → Actions
+   (`ODDS_API_KEY`, `API_FOOTBALL_KEY`, entrambe facoltative).
+2. Settings → Pages → Build and deployment → Source: **GitHub Actions**.
+3. Actions → "Analisi automatica" → **Run workflow** per il primo giro.
+
+Ogni giro dura 1–2 minuti: circa 300 minuti al mese, nei limiti gratuiti di GitHub Actions.
+
 ## Output su disco
 ```
 data/latest.json                      ultimo report (letto dalla dashboard)

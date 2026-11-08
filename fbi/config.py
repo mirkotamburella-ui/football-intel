@@ -23,7 +23,8 @@ MAX_STAKE_EUR = 10.0
 # Chiavi verificate sull'elenco ufficiale di The Odds API (regione "eu"): unibet_it e codere_it sono le
 # versioni con licenza italiana. Sisal, Snai, Eurobet, Lottomatica non sono coperti da nessun provider:
 # per loro la dashboard indica la "quota minima" sopra la quale la selezione conviene.
-DEFAULT_BOOKMAKERS = ("unibet_it", "codere_it", "bet365", "williamhill", "betfair_ex_eu", "sport888", "betsson", "leovegas_se")
+# Le borse scommesse (betfair_ex_*, matchbook) non sono mai "giocabili": servono solo al prezzo di consenso.
+DEFAULT_BOOKMAKERS = ("unibet_it", "codere_it", "bet365", "williamhill", "sport888", "betsson", "leovegas_se")
 
 
 def load_dotenv(path: Path | None = None) -> None:

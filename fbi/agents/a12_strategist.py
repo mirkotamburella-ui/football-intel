@@ -73,7 +73,8 @@ class FinalBettingStrategist(Agent):
                     "home": fx["home"]["name"], "away": fx["away"]["name"], "competition": fx["competition"],
                     "league_slug": fx.get("league_slug"), "kickoff_local": fx["kickoff_local"], "kickoff_utc": fx["kickoff_utc"],
                     **{k: c[k] for k in ("key", "label", "market", "odds", "bookmaker", "preferred_bookmaker", "odds_source", "odds_fetched_at",
-                                         "best_odds", "best_bookmaker", "p_model", "p_market_fair", "p_est", "p_est_range_90", "ev", "edge_pp", "p_push")},
+                                         "best_odds", "best_bookmaker", "p_model", "p_market_fair", "p_est", "p_est_range_90", "ev", "edge_pp", "p_push",
+                                         "market_median_odds", "odds_vs_median_pct", "odds_anomalous", "books_count")},
                     "p_display": round_prob(c["p_est"]),
                     # quota minima per avere EV ≥ 0 con la probabilità stimata (per bookmaker non coperti, es. Sisal)
                     "min_odds_for_value": min_odds(c),

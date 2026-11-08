@@ -77,6 +77,26 @@ class OddsApi(unittest.TestCase):
         self.assertEqual(p.league_odds("ita.1", datetime.now(timezone.utc), datetime.now(timezone.utc)), [])
 
 
+class ExchangesAndAnomalies(unittest.TestCase):
+    def q(self, book, d, sel="HOME"):
+        return {"market": "1X2", "selection": sel, "line": None, "decimal": d, "open_decimal": None,
+                "bookmaker": book, "source": "x", "fetched_at": "t"}
+
+    def test_exchange_commission_and_not_playable(self):
+        a = analyze_quotes([self.q("betfair_ex_eu", 2.64), self.q("unibet_it", 2.40)], ["betfair_ex_eu", "unibet_it"])
+        m = a["markets"]["1X2|HOME"]
+        self.assertEqual(m["books"]["betfair_ex_eu"], 2.558)  # 1 + 1.64 × 0.95
+        self.assertEqual(m["playable"]["bookmaker"], "unibet_it")  # la borsa non è mai "giocabile"
+
+    def test_anomalous_price_flagged(self):
+        qs = [self.q("unibet_it", 2.90), self.q("williamhill", 2.40), self.q("betsson", 2.45), self.q("sport888", 2.42)]
+        m = analyze_quotes(qs, ["unibet_it"])["markets"]["1X2|HOME"]
+        self.assertEqual(m["market_median"], 2.42)
+        self.assertTrue(m["anomalous"])
+        ok = analyze_quotes(qs[1:], ["williamhill"])["markets"]["1X2|HOME"]
+        self.assertFalse(ok["anomalous"])
+
+
 class DrawNoBet(unittest.TestCase):
     def test_dnb_fair_is_absolute_win_probability(self):
         q = lambda m, s, d: {"market": m, "selection": s, "line": None, "decimal": d, "open_decimal": None,  # noqa: E731

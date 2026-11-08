@@ -19,6 +19,8 @@ def qc_selection(ctx, c: dict, score: dict, risk_match: dict, risk_sel: dict, fi
             fails.append(f"quota non aggiornata ({age:.0f} min > {s.max_odds_age_minutes})")
     if s.require_preferred_bookmaker and not c.get("preferred_bookmaker"):
         fails.append(f"quota disponibile solo presso bookmaker non preferito ({c.get('bookmaker')})")
+    if c.get("odds_anomalous"):
+        fails.append(f"quota anomala: {c.get('odds_vs_median_pct'):+.1f}% sopra la mediana degli altri bookmaker ({c.get('market_median_odds')}): possibile errore o ritardo")
     # partita verificata e non iniziata
     if fixture.get("state") != "pre":
         fails.append("partita non in stato pre-match")

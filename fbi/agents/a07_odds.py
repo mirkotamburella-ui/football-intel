@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from statistics import median
 from datetime import timedelta
 
 from ..context import src
@@ -20,7 +21,22 @@ def mkey(q: dict) -> str:
     return f"{q['market']}|{q['selection']}" + (f"|{float(q['line'])}" if q.get("line") is not None else "")
 
 
+# Borse scommesse: le quote non includono la commissione sulle vincite. Le si riporta alla quota
+# effettiva (1 + (q − 1) × (1 − commissione)) e non le si usa come quota "giocabile".
+EXCHANGES = {"betfair_ex_eu": 0.05, "betfair_ex_uk": 0.05, "betfair_ex_au": 0.05, "matchbook": 0.02, "smarkets": 0.02}
+ANOMALY_PCT = 8.0  # quota giocabile oltre la mediana degli altri bookmaker: probabile errore o ritardo
+
+
+def _effective(q: dict) -> dict:
+    c = EXCHANGES.get(q["bookmaker"])
+    if not c:
+        return q
+    adj = lambda d: round(1 + (d - 1) * (1 - c), 3) if d else d  # noqa: E731
+    return dict(q, decimal=adj(q["decimal"]), open_decimal=adj(q.get("open_decimal")), raw_decimal=q["decimal"], exchange_commission=c)
+
+
 def analyze_quotes(quotes: list[dict], preferred: list[str]) -> dict:
+    quotes = [_effective(q) for q in quotes]
     by_key: dict[str, dict[str, dict]] = defaultdict(dict)
     for q in quotes:
         k = mkey(q)
@@ -30,7 +46,7 @@ def analyze_quotes(quotes: list[dict], preferred: list[str]) -> dict:
     markets = {}
     for k, books in by_key.items():
         best = max(books.values(), key=lambda q: q["decimal"])
-        pref = [books[b] for b in preferred if b in books]
+        pref = [books[b] for b in preferred if b in books and b not in EXCHANGES]
         playable = max(pref, key=lambda q: q["decimal"]) if pref else None  # migliore quota tra i bookmaker preferiti
         is_pref = playable is not None
         playable = playable or best
@@ -39,7 +55,14 @@ def analyze_quotes(quotes: list[dict], preferred: list[str]) -> dict:
         if playable.get("open_decimal"):
             mov = round((playable["decimal"] / playable["open_decimal"] - 1) * 100, 1)
         imps = [1 / q["decimal"] for q in books.values()]
+        # confronto con la mediana degli ALTRI bookmaker (servono almeno 2 altri prezzi)
+        others = [q["decimal"] for b, q in books.items() if b != playable["bookmaker"]]
+        med = round(median(others), 3) if len(others) >= 2 else None
+        vs_med = round((playable["decimal"] / med - 1) * 100, 1) if med else None
         markets[k] = {
+            "market_median": med,
+            "playable_vs_median_pct": vs_med,
+            "anomalous": bool(vs_med is not None and vs_med > ANOMALY_PCT),
             "books": {b: q["decimal"] for b, q in books.items()},
             "best": {"decimal": best["decimal"], "bookmaker": best["bookmaker"]},
             "playable": {"decimal": playable["decimal"], "bookmaker": playable["bookmaker"], "preferred_bookmaker": is_pref,

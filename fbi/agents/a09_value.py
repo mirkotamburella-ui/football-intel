@@ -80,6 +80,8 @@ class ValueBettingAnalyst(Agent):
                     "edge_pp": round((pm - pf) * 100, 1),
                     "ev": round(e, 4), "ev_best_price": round(e_best, 4),
                     "movement_pct": mk.get("movement_pct"), "books_disagreement_pp": mk.get("books_disagreement_pp"),
+                    "market_median_odds": mk.get("market_median"), "odds_vs_median_pct": mk.get("playable_vs_median_pct"),
+                    "odds_anomalous": mk.get("anomalous", False), "books_count": len(mk.get("books", {})),
                     "value": e > 0,
                 })
             cands.sort(key=lambda c: -c["ev"])

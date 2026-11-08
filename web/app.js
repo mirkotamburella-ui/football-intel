@@ -116,7 +116,7 @@ function selCard(s) {
     <div class="muted small">${esc(s.competition)}</div>
     <div class="row" style="margin-top:8px"><span><b>${esc(s.label)}</b> @ <b class="num">${s.odds}</b> <span class="muted small">${esc(s.bookmaker)}</span></span>
       <span class="pill acc num">AI ${s.score.final}</span></div>
-    ${minOdds(s) ? `<div class="small" style="margin-top:6px">Sul tuo bookmaker conviene solo a quota <b class="num">≥ ${minOdds(s).toFixed(2)}</b></div>` : ""}
+    ${minOdds(s) ? `<div class="small" style="margin-top:6px">Sul tuo bookmaker conviene solo a quota <b class="num">≥ ${minOdds(s).toFixed(2)}</b>${s.market_median_odds ? ` · media mercato <b class="num">${s.market_median_odds.toFixed(2)}</b> (${s.books_count} bookmaker)` : ""}</div>` : ""}
     <div class="row small" style="margin-top:6px"><span>Prob. stimata <b class="num">${pct(s.p_est)}</b> <span class="muted">(${pct(s.p_est_range_90[0])}–${pct(s.p_est_range_90[1])})</span></span><span class="num">EV ${sgn(s.ev)}</span></div>
     <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${status}${relPill(s.reliability_level)}${riskPill(s.risk_level)}${verPill(s.fixture_verification)}</div>
     ${!s.qc_passed ? `<div class="small muted" style="margin-top:6px">Motivo: ${esc(s.qc_failures.slice(0, 2).join("; "))}</div>` : ""}
@@ -205,6 +205,7 @@ function matchDetail(eid, focusKey) {
       <div class="stats"><div><b>${pct(s.p_est)}</b><span>prob. stimata (90%: ${pct(s.p_est_range_90[0])}–${pct(s.p_est_range_90[1])})</span></div>
         <div><b>${s.score.final}</b><span>punteggio AI (base ${s.score.base} − contrarian ${s.score.contrarian_penalty})</span></div>
         <div><b>${pct(s.p_model)}</b><span>modello statistico</span></div><div><b>${pct(s.p_market_fair)}</b><span>mercato (senza margine)</span></div>
+        <div><b>${s.market_median_odds ? s.market_median_odds.toFixed(2) : "n.d."}</b><span>quota mediana degli altri bookmaker${s.odds_vs_median_pct != null ? ` (questa ${s.odds_vs_median_pct > 0 ? "+" : ""}${s.odds_vs_median_pct}%)` : ""}</span></div>
         <div><b>${sgn(s.ev)}</b><span>Expected Value</span></div>
         <div><b>≥ ${minOdds(s) ? minOdds(s).toFixed(2) : "n.d."}</b><span>quota minima per avere valore (es. su Sisal)</span></div><div><b>${esc(s.risk_level || "n.d.")}</b><span>livello di rischio</span></div></div>
       <div style="margin-top:8px">${s.qc_passed ? '<span class="pill ok">Supera il controllo qualità</span>' : `<span class="pill bad">Non conforme</span><ul class="clean small">${s.qc_failures.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>`}</div></div>

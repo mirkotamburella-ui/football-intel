@@ -27,7 +27,7 @@ class HeadToHeadAnalyst(Agent):
             if not games:
                 return {"available": False, "note": "nessuno scontro diretto recente nelle fonti"}
             hid = fx["home"]["id"]
-            rows, W = [], 0.0
+            rows, W, raw_w = [], 0.0, []
             agg = {"home_team_win": 0.0, "draw": 0.0, "away_team_win": 0.0, "over15": 0.0, "over25": 0.0, "under35": 0.0, "btts": 0.0, "goals": 0.0}
             for g in games:
                 years = (ctx.now_utc - E.parse_dt(g["date"])).days / 365.25
@@ -44,11 +44,14 @@ class HeadToHeadAnalyst(Agent):
                 agg["btts"] += w * (gf > 0 and ga > 0)
                 agg["goals"] += w * tot
                 W += w
+                raw_w.append(w)
                 rows.append({"date": g["date"][:10], "score_from_today_home_view": f"{gf}-{ga}",
                              "venue": "casa" if g["home_id"] == hid else "trasferta", "weight": round(w, 2)})
+            if W < 0.05:  # tutti i confronti più vecchi di ~6 anni
+                return {"available": False, "note": "scontri diretti troppo datati: peso statistico nullo"}
             weighted = {k: round(v / W, 2) for k, v in agg.items()}
-            # dimensione effettiva del campione (Kish): con confronti vecchi è < numero di partite
-            n_eff = round(W**2 / sum(r["weight"] ** 2 for r in rows), 2) if W else 0
+            # dimensione effettiva del campione (Kish), sui pesi non arrotondati
+            n_eff = round(W**2 / sum(x * x for x in raw_w), 2)
             results = [r["score_from_today_home_view"] for r in rows]
             recurrent = max(set(results), key=results.count)
             anomalies = []

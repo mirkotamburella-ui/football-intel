@@ -163,6 +163,22 @@ class QualityControl(unittest.TestCase):
         self.assertIn("campionato poco affidabile", risk)
 
 
+class H2HOldGames(unittest.TestCase):
+    def test_very_old_h2h_has_no_weight(self):
+        from fbi.agents.a04_h2h import HeadToHeadAnalyst
+        from fbi.http_client import Fetched
+        old = {"seasonseries": [{"type": "head-to-head", "events": [
+            {"id": "1", "date": "1990-01-01T15:00Z", "statusType": {"completed": True},
+             "competitors": [{"homeAway": "home", "score": "1", "team": {"id": "A"}}, {"homeAway": "away", "score": "0", "team": {"id": "B"}}]}]}]}
+        ctx = SimpleNamespace(now_utc=NOW, espn=SimpleNamespace(summary=lambda eid: Fetched(old, "u", "t", False, {})),
+                              settings=Settings())
+        ag = HeadToHeadAnalyst()
+        inputs = {"A01": {"summary": {"fixtures": [{"event_id": "E", "home": {"id": "A"}, "away": {"id": "B"}}]}}}
+        _, m = ag.analyze(ctx, inputs)
+        self.assertFalse(m["E"]["available"])
+        self.assertEqual(ag.errors, [])
+
+
 class MinOdds(unittest.TestCase):
     def test_breakeven(self):
         from fbi.agents.a12_strategist import min_odds

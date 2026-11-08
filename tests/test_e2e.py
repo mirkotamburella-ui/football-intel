@@ -26,6 +26,7 @@ class EndToEnd(unittest.TestCase):
         s = Settings()
         s.data_dir = cls.tmp
         s.max_matches = 3
+        s.min_minutes_before_kickoff = 10  # regola in vigore quando la fixture è stata catturata
         cls.ctx = build_context(s, offline=True, now_utc=datetime.fromisoformat(meta["now_utc"].replace("Z", "+00:00")))
         cls.report, cls.agent_reports = run_analysis(cls.ctx)
         cls.meta = meta

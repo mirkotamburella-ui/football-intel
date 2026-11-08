@@ -82,7 +82,9 @@ class Settings:
     min_ev: float = 0.0  # valore atteso minimo stimato per ogni gamba
     min_leg_odds: float = 1.20
     max_odds_age_minutes: int = 90
-    min_minutes_before_kickoff: int = 10
+    # una partita entra nelle selezioni solo se inizia almeno N minuti dopo l'analisi
+    # (tempo per controllarla e giocarla; quelle più vicine vengono escluse)
+    min_minutes_before_kickoff: int = 60
     min_team_games: int = 5  # partite di campionato minime per squadra
     min_data_quality: float = 0.55
     # multipla principale
@@ -164,6 +166,7 @@ def get_settings(load_env_file: bool = True) -> Settings:
         min_ev=_f("MIN_EV", 0.0),
         min_leg_odds=_f("MIN_LEG_ODDS", 1.20),
         max_odds_age_minutes=_i("MAX_ODDS_AGE_MINUTES", 90),
+        min_minutes_before_kickoff=_i("MIN_MINUTES_BEFORE_KICKOFF", 60),
         max_per_league=_i("MAX_PER_LEAGUE", 2),
         max_per_league_hard=_i("MAX_PER_LEAGUE_HARD", 4),
         league_extra_min_score=_f("LEAGUE_EXTRA_MIN_SCORE", 68.0),

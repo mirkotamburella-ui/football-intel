@@ -1,0 +1,370 @@
+{
+ "days": {
+  "2026-11-08": {
+   "run_id": "20261108T173538Z",
+   "generated_at_local": "2026-11-08 18:35",
+   "matches_analyzed": 64,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [],
+   "verified": true
+  },
+  "2026-11-08_settimana": {
+   "run_id": "20261108T172212Z",
+   "generated_at_local": "2026-11-08 18:22",
+   "matches_analyzed": 483,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 3 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [
+    {
+     "event_id": "401860428",
+     "match": "Goiás - Ponte Preta",
+     "competition": "Brazil Serie B",
+     "kickoff_utc": "2026-11-08T22:15Z",
+     "kickoff_local": "2026-11-08 23:15",
+     "key": "OU|UNDER|3.5",
+     "label": "Under 3.5",
+     "odds": 1.79,
+     "bookmaker": "codere_it",
+     "p_est": 0.5695,
+     "ev": 0.0193,
+     "score": 73.4,
+     "final_score": "1-0",
+     "outcome": "won",
+     "result_source": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/summary?event=401860428",
+     "result_fetched_at": "2026-11-09T01:57:38Z"
+    },
+    {
+     "event_id": "401880744",
+     "match": "Wigan Athletic - Barnsley",
+     "competition": "EFL League One",
+     "kickoff_utc": "2026-11-14T15:00Z",
+     "kickoff_local": "2026-11-14 16:00",
+     "key": "OU|UNDER|2.5",
+     "label": "Under 2.5",
+     "odds": 2.38,
+     "bookmaker": "betsson",
+     "p_est": 0.4368,
+     "ev": 0.0396,
+     "score": 73.1
+    },
+    {
+     "event_id": "401860430",
+     "match": "Ceará - América Mineiro",
+     "competition": "Brazil Serie B",
+     "kickoff_utc": "2026-11-08T22:15Z",
+     "kickoff_local": "2026-11-08 23:15",
+     "key": "OU|UNDER|2.5",
+     "label": "Under 2.5",
+     "odds": 1.82,
+     "bookmaker": "leovegas_se",
+     "p_est": 0.5508,
+     "ev": 0.0024,
+     "score": 63.0,
+     "final_score": "0-1",
+     "outcome": "won",
+     "result_source": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/summary?event=401860430",
+     "result_fetched_at": "2026-11-09T01:57:38Z"
+    }
+   ],
+   "verified": false
+  },
+  "2026-11-09": {
+   "run_id": "20261109T015738Z",
+   "generated_at_local": "2026-11-09 02:57",
+   "matches_analyzed": 15,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [],
+   "verified": true
+  },
+  "2026-11-10": {
+   "run_id": "20261110T002242Z",
+   "generated_at_local": "2026-11-10 01:22",
+   "matches_analyzed": 45,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [],
+   "verified": true
+  },
+  "2026-11-11": {
+   "run_id": "20261111T021436Z",
+   "generated_at_local": "2026-11-11 03:14",
+   "matches_analyzed": 44,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [],
+   "verified": true
+  },
+  "2026-11-12": {
+   "run_id": "20261112T032107Z",
+   "generated_at_local": "2026-11-12 04:21",
+   "matches_analyzed": 78,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [],
+   "verified": true
+  },
+  "2026-11-13": {
+   "run_id": "20261113T153318Z",
+   "generated_at_local": "2026-11-13 16:33",
+   "matches_analyzed": 36,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 1 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 1 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [
+    {
+     "event_id": "401883136",
+     "match": "Leganés - Burgos",
+     "competition": "LALIGA 2",
+     "kickoff_utc": "2026-11-13T19:30Z",
+     "kickoff_local": "2026-11-13 20:30",
+     "key": "1X2|AWAY",
+     "label": "2 (vittoria trasferta)",
+     "odds": 3.0,
+     "bookmaker": "williamhill",
+     "p_est": 0.3897,
+     "ev": 0.169,
+     "score": 83.1,
+     "final_score": "3-1",
+     "outcome": "lost",
+     "result_source": "https://site.api.espn.com/apis/site/v2/sports/soccer/all/summary?event=401883136",
+     "result_fetched_at": "2026-11-13T22:05:52Z"
+    }
+   ],
+   "verified": true
+  },
+  "2026-11-14": {
+   "run_id": "20261114T142334Z",
+   "generated_at_local": "2026-11-14 15:23",
+   "matches_analyzed": 111,
+   "main": {
+    "status": "not_possible",
+    "reason": "solo 3 selezioni superano tutti i controlli di qualità (ne servono almeno 5, per campionato massimo 2, fino a 4 se con punteggio ≥ 68). I criteri non vengono abbassati: oggi non è possibile costruire una multipla conforme.",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "prudent": {
+    "status": "not_possible",
+    "reason": "solo 0 selezioni conformi con probabilità stimata ≥ 62% (ne servono 5)",
+    "total_odds": null,
+    "stake_eur": null,
+    "potential_gross_return_eur": null,
+    "joint_probability": null,
+    "expected_value": null,
+    "legs": []
+   },
+   "singles": [
+    {
+     "event_id": "401860432",
+     "match": "América Mineiro - Avaí",
+     "competition": "Brazil Serie B",
+     "kickoff_utc": "2026-11-14T19:30Z",
+     "kickoff_local": "2026-11-14 20:30",
+     "key": "OU|UNDER|2.5",
+     "label": "Under 2.5",
+     "odds": 2.06,
+     "bookmaker": "codere_it",
+     "p_est": 0.5231,
+     "ev": 0.0776,
+     "score": 80.1
+    },
+    {
+     "event_id": "401860440",
+     "match": "Atlético Goianiense - Cuiabá",
+     "competition": "Brazil Serie B",
+     "kickoff_utc": "2026-11-14T19:30Z",
+     "kickoff_local": "2026-11-14 20:30",
+     "key": "OU|UNDER|2.5",
+     "label": "Under 2.5",
+     "odds": 1.91,
+     "bookmaker": "williamhill",
+     "p_est": 0.529,
+     "ev": 0.0103,
+     "score": 70.5
+    },
+    {
+     "event_id": "401860437",
+     "match": "Fortaleza - Vila Nova",
+     "competition": "Brazil Serie B",
+     "kickoff_utc": "2026-11-14T19:30Z",
+     "kickoff_local": "2026-11-14 20:30",
+     "key": "OU|UNDER|2.5",
+     "label": "Under 2.5",
+     "odds": 1.88,
+     "bookmaker": "codere_it",
+     "p_est": 0.5474,
+     "ev": 0.0291,
+     "score": 69.1
+    }
+   ],
+   "verified": false
+  }
+ },
+ "stats": {
+  "legs_settled": 3,
+  "legs_won": 2,
+  "legs_push": 0,
+  "hit_rate": 0.667,
+  "avg_predicted_prob": 0.503,
+  "brier_score": 0.1797,
+  "calibration": {
+   "30-40%": {
+    "n": 1,
+    "won": 0,
+    "avg_p": 0.39,
+    "hit_rate": 0.0
+   },
+   "50-60%": {
+    "n": 2,
+    "won": 2,
+    "avg_p": 0.56,
+    "hit_rate": 1.0
+   }
+  },
+  "main": {
+   "settled": 0,
+   "won": 0,
+   "simulated_staked_eur": 0,
+   "simulated_returned_eur": 0,
+   "simulated_roi": null
+  },
+  "prudent": {
+   "settled": 0,
+   "won": 0,
+   "simulated_staked_eur": 0,
+   "simulated_returned_eur": 0,
+   "simulated_roi": null
+  },
+  "note": "P/L simulato: nessuna scommessa reale. Servono centinaia di selezioni prima che le statistiche siano significative."
+ }
+}

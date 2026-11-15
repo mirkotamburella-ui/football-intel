@@ -32,6 +32,29 @@ DISPLAY = {
     "Athletic": "Athletic Club (MG)",
 }
 
+# Nazionali: nome italiano (le chiavi sono i displayName ESPN esatti)
+NATIONAL = {
+    "Italy": "Italia", "Belgium": "Belgio", "Spain": "Spagna", "England": "Inghilterra", "France": "Francia",
+    "Türkiye": "Turchia", "Turkey": "Turchia", "Croatia": "Croazia", "Czechia": "Repubblica Ceca", "Germany": "Germania",
+    "Netherlands": "Paesi Bassi", "Switzerland": "Svizzera", "Austria": "Austria", "Denmark": "Danimarca", "Sweden": "Svezia",
+    "Norway": "Norvegia", "Finland": "Finlandia", "Poland": "Polonia", "Hungary": "Ungheria", "Romania": "Romania",
+    "Greece": "Grecia", "Serbia": "Serbia", "Scotland": "Scozia", "Wales": "Galles", "Northern Ireland": "Irlanda del Nord",
+    "Republic of Ireland": "Irlanda", "Iceland": "Islanda", "Slovakia": "Slovacchia", "Slovenia": "Slovenia",
+    "Ukraine": "Ucraina", "Georgia": "Georgia", "Albania": "Albania", "Belarus": "Bielorussia", "Cyprus": "Cipro",
+    "Montenegro": "Montenegro", "Latvia": "Lettonia", "Lithuania": "Lituania", "Estonia": "Estonia", "Armenia": "Armenia",
+    "San Marino": "San Marino", "North Macedonia": "Macedonia del Nord", "Bosnia-Herzegovina": "Bosnia ed Erzegovina",
+    "Bulgaria": "Bulgaria", "Israel": "Israele", "Kosovo": "Kosovo", "Luxembourg": "Lussemburgo", "Moldova": "Moldavia",
+    "Azerbaijan": "Azerbaigian", "Kazakhstan": "Kazakistan", "Faroe Islands": "Isole Faroe", "Malta": "Malta",
+    "Andorra": "Andorra", "Gibraltar": "Gibilterra", "Liechtenstein": "Liechtenstein", "Portugal": "Portogallo",
+    "Brazil": "Brasile", "Argentina": "Argentina", "Mexico": "Messico", "United States": "Stati Uniti", "USA": "Stati Uniti",
+    "Morocco": "Marocco", "Japan": "Giappone", "South Korea": "Corea del Sud",
+}
+
+
+def is_national_competition(competition: str | None) -> bool:
+    c = competition or ""
+    return any(w in c for w in ("Nations League", "International Friendly", "World Cup Qualifying", "Euro Qualifying"))
+
 
 def display(name: str | None) -> str | None:
     return DISPLAY.get(name, name) if name else name

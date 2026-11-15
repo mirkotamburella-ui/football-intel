@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from ..http_client import Fetched, HttpClient
-from ..team_names import display
+from ..team_names import NATIONAL, display, is_national_competition
 
 log = logging.getLogger("fbi.espn")
 
@@ -102,6 +102,10 @@ def parse_scoreboard(f: Fetched) -> list[dict]:
             for side in ("home", "away"):
                 link = ((odds0.get("moneyline") or {}).get(side) or {}).get("close", {}).get("link", {})
                 tags = link.get("tracking", {}).get("tags", {}) or tags
+            if is_national_competition(comp.get("altGameNote") or e.get("season", {}).get("slug", "")):
+                for side in ("home", "away"):
+                    dn = teams[side]["team"]["displayName"]
+                    teams[side] = dict(teams[side], team=dict(teams[side]["team"], displayName=NATIONAL.get(dn, dn), _espn=dn))
             out.append(
                 {
                     "event_id": str(e["id"]),
@@ -117,14 +121,14 @@ def parse_scoreboard(f: Fetched) -> list[dict]:
                     "home": {
                         "id": str(teams["home"]["team"]["id"]),
                         "name": display(teams["home"]["team"]["displayName"]),
-                        "espn_name": teams["home"]["team"]["displayName"],
+                        "espn_name": teams["home"]["team"].get("_espn") or teams["home"]["team"]["displayName"],
                         "form": teams["home"].get("form"),
                         "score": teams["home"].get("score"),
                     },
                     "away": {
                         "id": str(teams["away"]["team"]["id"]),
                         "name": display(teams["away"]["team"]["displayName"]),
-                        "espn_name": teams["away"]["team"]["displayName"],
+                        "espn_name": teams["away"]["team"].get("_espn") or teams["away"]["team"]["displayName"],
                         "form": teams["away"].get("form"),
                         "score": teams["away"].get("score"),
                     },

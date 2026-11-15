@@ -174,7 +174,8 @@ function renderMatches(r) {
     if (state.filter === "ok" && !c.recommended) return false;
     if (state.filter === "high" && c.reliability_level !== "Alta") return false;
     if (state.q) {
-      const t = (c.match + " " + c.competition).toLowerCase();
+      const b = c.best_candidate || {};
+      const t = (c.match + " " + c.competition + " " + (b.home || "") + " " + (b.away || "")).toLowerCase();
       if (!t.includes(state.q)) return false;
     }
     return true;

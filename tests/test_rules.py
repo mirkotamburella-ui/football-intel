@@ -255,6 +255,10 @@ class Parsers(unittest.TestCase):
         # l'abbinamento tra provider funziona sia col nome locale sia con quello ESPN
         self.assertGreaterEqual(match_any(["1. FC Köln", "FC Cologne"], ["Bayer Leverkusen"], "FC Cologne", "Bayer Leverkusen"), 0.8)
 
+    def test_national_team_names(self):
+        self.assertGreaterEqual(match_pair("Croatia", "Czechia", "Croatia", "Czech Republic"), 0.8)
+        self.assertGreaterEqual(match_pair("France", "Türkiye", "France", "Turkey"), 0.8)
+
     def test_name_matching(self):
         self.assertGreaterEqual(match_pair("Brighton & Hove Albion", "Brentford", "Brighton and Hove Albion", "Brentford"), 0.8)
         self.assertLess(match_pair("Inter Milan", "AC Milan", "AC Milan", "Inter Milan"), 0.8)

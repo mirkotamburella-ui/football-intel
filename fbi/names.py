@@ -19,6 +19,9 @@ _ALIASES = {
     "inter": "internazionale", "man city": "manchester city", "man united": "manchester united",
     "man utd": "manchester united", "spurs": "tottenham hotspur", "wolves": "wolverhampton wanderers",
     "psg": "paris saint germain", "brighton": "brighton hove albion",
+    # nazionali: ESPN usa i nomi ufficiali recenti, i bookmaker spesso quelli storici
+    "turkiye": "turkey", "czechia": "czech republic", "korea republic": "south korea", "usa": "united states",
+    "ir iran": "iran", "cote divoire": "ivory coast", "cape verde islands": "cape verde", "bosnia herzegovina": "bosnia and herzegovina",
 }
 
 

@@ -11,7 +11,7 @@ TIER2 = {
     "rus.1", "pol.1", "cze.1", "eng.3", "ned.2", "uefa.europa.conf", "bra.1", "arg.1", "mex.1", "usa.1", "jpn.1",
     "kor.1", "chn.1", "aus.1", "chi.1", "col.1", "conmebol.libertadores", "conmebol.sudamericana", "bra.2", "ksa.1",
     "eng.fa", "ita.coppa_italia", "esp.copa_del_rey", "ger.dfb_pokal", "fra.coupe_de_france", "eng.league_cup",
-    "eng.w.1", "usa.nwsl",
+    "eng.w.1", "usa.nwsl", "uefa.nations",
 }
 LOW_RELIABILITY_MARKERS = ("ncaa", "u19", "u20", "u21", "u23", "youth", "friendly", "reserve", "w.2")
 

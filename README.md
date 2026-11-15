@@ -223,6 +223,14 @@ Attivazione (una volta sola):
 
 Ogni giro dura 1–2 minuti: circa 300 minuti al mese, nei limiti gratuiti di GitHub Actions.
 
+## Partite tra nazionali
+
+Per Nations League, qualificazioni e amichevoli ESPN fornisce solo le partite della singola competizione.
+Il sistema usa allora due fonti pubbliche dedicate: l'archivio dei risultati internazionali
+(`martj42/international_results`, ultimi 3 anni in tutte le competizioni) e il **World Football Elo** di
+eloratings.net, che sostituisce l'Elo interno con peso 0,45 sull'1X2. La Nations League è tier 2 e ha le quote
+The Odds API (`soccer_uefa_nations_league`); le amichevoli restano tier 3.
+
 ## Analisi della settimana
 
 `python -m fbi run --days 7` (o `HORIZON_DAYS=7`) analizza le partite dei prossimi 7 giorni con gli stessi 12 agenti e

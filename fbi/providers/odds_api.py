@@ -35,6 +35,7 @@ SPORT_KEYS = {
     "usa.1": "soccer_usa_mls", "jpn.1": "soccer_japan_j_league", "chn.1": "soccer_china_superleague",
     "aus.1": "soccer_australia_aleague", "kor.1": "soccer_korea_kleague1", "uefa.champions": "soccer_uefa_champs_league",
     "uefa.europa": "soccer_uefa_europa_league", "uefa.europa.conf": "soccer_uefa_europa_conference_league",
+    "uefa.nations": "soccer_uefa_nations_league",
     "conmebol.libertadores": "soccer_conmebol_copa_libertadores", "conmebol.sudamericana": "soccer_conmebol_copa_sudamericana",
 }
 

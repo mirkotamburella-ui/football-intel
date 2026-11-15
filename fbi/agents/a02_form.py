@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from statistics import mean, pstdev
 
-from ..context import get_standings, get_summary, get_team_results, src, standings_row, team_view
+from ..context import get_standings, get_summary, src, standings_row, team_results_for, team_view
 from ..providers import espn as E
 from .a01_fixture_scout import fixtures_from
 from .base import Agent
@@ -26,10 +26,10 @@ def record(games: list[dict]) -> dict | None:
 def team_form(ctx, fx, side, agent) -> dict:
     team = fx[side]
     tid, slug = team["id"], fx.get("league_slug")
-    res, sources = get_team_results(ctx, slug, tid)
+    res, sources, rid = team_results_for(ctx, fx, side)
     for s in sources:
         agent.add_source(s)
-    league = team_view(res, tid)
+    league = team_view(res, rid)
     st, f_st = get_standings(ctx, slug)
     if f_st:
         agent.add_source(src(f_st))

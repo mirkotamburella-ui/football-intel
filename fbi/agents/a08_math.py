@@ -12,7 +12,8 @@ from __future__ import annotations
 import math
 from statistics import mean, pstdev
 
-from ..context import get_standings, get_team_results, src, team_view
+from ..context import get_standings, intl_data, src, team_results_for, team_view
+from ..providers.international import ELO_HOME_ADV, is_international
 from ..stats.elo import Elo
 from ..stats.glm import PoissonGLM
 from ..stats.montecarlo import match_intervals, simulate_scorelines
@@ -42,7 +43,7 @@ class MathematicalPrediction(Agent):
                 if fx.get("league_slug") != slug:
                     continue
                 for side in ("home", "away"):
-                    res, sources = get_team_results(ctx, slug, fx[side]["id"])
+                    res, sources, _ = team_results_for(ctx, fx, side)
                     for s in sources:
                         self.add_source(s)
                     for m in res:
@@ -77,10 +78,9 @@ class MathematicalPrediction(Agent):
 
         def one(fx):
             slug = fx.get("league_slug")
-            hid, aid = fx["home"]["id"], fx["away"]["id"]
+            res_h, _, hid = team_results_for(ctx, fx, "home")
+            res_a, _, aid = team_results_for(ctx, fx, "away")
             lm = self.league_models(ctx, slug, fixtures)
-            res_h, _ = get_team_results(ctx, slug, hid)
-            res_a, _ = get_team_results(ctx, slug, aid)
             gh, ga = team_view(res_h, hid, current_only=False), team_view(res_a, aid, current_only=False)
             n_h, n_a = len(gh), len(ga)
             models, lambdas = {}, {}
@@ -120,8 +120,22 @@ class MathematicalPrediction(Agent):
             for name, (lh, la) in lambdas.items():
                 models[name] = {"lambda_home": round(lh, 3), "lambda_away": round(la, 3),
                                 "probs": {k: round(v, 4) for k, v in market_probs(score_matrix(lh, la)).items()}}
-            # M4 Elo
-            if lm and lm["elo"].n.get(hid, 0) >= 5 and lm["elo"].n.get(aid, 0) >= 5:
+            # M4 Elo: per le nazionali il World Football Elo di eloratings.net (calibrato su decenni)
+            world = None
+            if is_international(fx):
+                d = intl_data(ctx)
+                rh = d.elo_rating(fx["home"].get("espn_name") or fx["home"]["name"])
+                ra = d.elo_rating(fx["away"].get("espn_name") or fx["away"]["name"])
+                if rh and ra:
+                    world = Elo(home_adv=ELO_HOME_ADV)
+                    world.r = {hid: rh, aid: ra}
+                    if d.elo_src:
+                        self.add_source(d.elo_src)
+            if world:
+                models["elo"] = {"source": "World Football Elo (eloratings.net)", "rating_home": round(world.rating(hid)),
+                                 "rating_away": round(world.rating(aid)), "games_home": 99, "games_away": 99,
+                                 "probs": {k: round(v, 4) for k, v in world.probs_1x2(hid, aid, lm["draw_rate"] if lm else 0.26, neutral).items()}}
+            elif lm and lm["elo"].n.get(hid, 0) >= 5 and lm["elo"].n.get(aid, 0) >= 5:
                 e = lm["elo"]
                 models["elo"] = {"rating_home": round(e.rating(hid)), "rating_away": round(e.rating(aid)),
                                  "games_home": e.n[hid], "games_away": e.n[aid],
@@ -139,7 +153,7 @@ class MathematicalPrediction(Agent):
             ens = market_probs(m)
             elo_w = 0.0
             if "elo" in models:
-                elo_w = min(0.3, min(models["elo"]["games_home"], models["elo"]["games_away"]) / 60)
+                elo_w = 0.45 if models["elo"].get("source") else min(0.3, min(models["elo"]["games_home"], models["elo"]["games_away"]) / 60)
                 ep = models["elo"]["probs"]
                 for k in ("1X2|HOME", "1X2|DRAW", "1X2|AWAY"):
                     ens[k] = (1 - elo_w) * ens[k] + elo_w * ep[k]

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from statistics import mean
 
-from ..context import get_standings, get_team_results, src, standings_row, team_view
+from ..context import get_standings, src, standings_row, team_results_for, team_view
 from ..stats.poisson import market_probs, score_matrix
 from .a01_fixture_scout import fixtures_from
 from .base import Agent
@@ -13,11 +13,10 @@ SHRINK_GAMES = 6  # pseudo-partite di "media di lega" aggiunte alle stime (shrin
 
 def team_offdef(ctx, fx, side, agent):
     t = fx[side]
-    slug, tid = fx.get("league_slug"), t["id"]
-    res, sources = get_team_results(ctx, slug, tid)
+    res, sources, rid = team_results_for(ctx, fx, side)
     for s in sources:
         agent.add_source(s)
-    g = team_view(res, tid)
+    g = team_view(res, rid)
     out = {"team": t["name"], "games": len(g)}
     if g:
         out.update({

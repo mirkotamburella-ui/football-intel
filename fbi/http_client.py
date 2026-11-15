@@ -158,6 +158,32 @@ class HttpClient:
         assert last_err is not None
         raise last_err
 
+    def get_text(self, url: str, ttl: int = 43200) -> Fetched:
+        """File di testo (CSV/TSV) con la stessa cache su disco; `data` è la stringa."""
+        key = self._key(url, {"_text": True})
+        cached = self._cache_get(key, ttl)
+        if cached:
+            return cached
+        if self.offline:
+            raise HttpError(url, None, "modalità offline: risorsa non presente in cache")
+        with self._sem:
+            self._throttle()
+            with self._stats_lock:
+                self.stats["requests"] += 1
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept-Encoding": "gzip"})
+                with urllib.request.urlopen(req, timeout=self.timeout * 2) as r:
+                    body = r.read()
+                    if r.headers.get("Content-Encoding") == "gzip":
+                        body = gzip.decompress(body)
+            except (urllib.error.URLError, TimeoutError, OSError) as e:
+                with self._stats_lock:
+                    self.stats["errors"] += 1
+                raise HttpError(url, getattr(e, "code", None), str(e)) from e
+        f = Fetched(body.decode("utf-8", "replace"), redact(url), iso(utcnow()), False, {})
+        self._cache_put(key, f)
+        return f
+
     def get_json(self, url: str, ttl: int = 600, headers: dict | None = None, params: dict | None = None) -> Fetched:
         if params:
             url = url + ("&" if "?" in url else "?") + urllib.parse.urlencode(params)

@@ -152,6 +152,29 @@ def get_team_results(ctx: RunContext, slug: str | None, team_id: str, min_games:
     return ctx.memo(f"results:{slug}:{team_id}", load) or ([], [])
 
 
+def intl_data(ctx: RunContext):
+    from .providers.international import InternationalData
+    return ctx.memo("intl_data", lambda: InternationalData(ctx.http, ctx.today).load())
+
+
+def team_results_for(ctx: RunContext, fx: dict, side: str) -> tuple[list[dict], list[dict], str]:
+    """Risultati della squadra di una partita. Ritorna (risultati, fonti, id_da_usare_nei_risultati).
+
+    Per le nazionali usa gli ultimi 3 anni di risultati internazionali (tutte le competizioni),
+    con id "nt:<nome>" coerenti fra tutte le partite; per i club il calendario ESPN della competizione.
+    """
+    from .providers.international import is_international
+    if is_international(fx):
+        d = intl_data(ctx)
+        nm, rows = d.team_results(fx[side].get("espn_name") or fx[side]["name"])
+        if nm and d.results_src:
+            conv = [dict(r, home_id="nt:" + r["home_name"], away_id="nt:" + r["away_name"]) for r in rows]
+            return conv, [d.results_src], "nt:" + nm
+        return [], [], fx[side]["id"]
+    res, sources = get_team_results(ctx, fx.get("league_slug"), fx[side]["id"])
+    return res, sources, fx[side]["id"]
+
+
 def team_view(results: list[dict], team_id: str, current_only: bool = True) -> list[dict]:
     """Risultati dal punto di vista della squadra: gf, ga, home, points, opponent_id."""
     out = []

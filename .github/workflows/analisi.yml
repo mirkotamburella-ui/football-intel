@@ -72,16 +72,19 @@ jobs:
         run: python -m fbi verify || echo "verifica non completata (riprova al prossimo giro)"
 
       - name: Analisi (12 agenti)
+        # il tipo di giro dipende dall'ORARIO PROGRAMMATO (github.event.schedule), non dall'ora reale:
+        # GitHub può avviare i giri programmati con ore di ritardo
+        env:
+          PIANO: ${{ github.event.schedule }}
         run: |
-          H=$(date -u +%H)
           if [ "$MODO" = "pagina" ]; then echo "solo pagina"
           elif [ "$MODO" = "settimana" ]; then
             cp data/history.json week/history.json 2>/dev/null || true
             FBI_DATA_DIR=week HORIZON_DAYS=$GIORNI ODDS_API_MAX_CREDITS_PER_RUN=24 python -m fbi run
             cp week/history.json data/history.json
-          elif [ "$H" = "22" ] && [ -f data/latest.json ]; then echo "solo verifica (nessun credito)"
-          elif [ "$H" = "07" ] || [ ! -f data/latest.json ]; then python -m fbi run
-          else python -m fbi refresh; fi
+          elif [ "$PIANO" = "45 22 * * *" ] && [ -f data/latest.json ]; then echo "solo verifica (nessun credito)"
+          elif [ "$PIANO" = "30 16 * * *" ] && [ -f data/latest.json ]; then python -m fbi refresh
+          else python -m fbi run; fi
 
       - name: Crea le pagine
         run: |

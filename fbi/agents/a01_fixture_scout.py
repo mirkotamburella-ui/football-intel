@@ -106,6 +106,9 @@ class FixtureScout(Agent):
                 reason = "nessuna quota disponibile dalle fonti configurate"
             elif not fx.get("league_slug"):
                 reason = "competizione non identificata (dati non verificabili)"
+            elif s.only_competitions and not any(c in (fx["competition"] or "").lower() or c in (fx.get("league_slug") or "").lower()
+                                                 for c in s.only_competitions):
+                reason = "fuori dal filtro focus"
             if reason:
                 excluded.append({"event_id": fx["event_id"], "match": f"{fx['home']['name']} - {fx['away']['name']}",
                                  "competition": fx["competition"], "kickoff_local": fx["kickoff_local"], "reason": reason})

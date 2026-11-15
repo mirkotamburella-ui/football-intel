@@ -290,8 +290,9 @@ function renderHistory(h) {
 /* --------------------------------------------------------------- SETUP */
 function renderAll() {
   const r = state.report;
+  const focus = (r.focus || []).length ? `Focus ${r.focus.join(", ")} · ` : "";
   const period = (r.horizon_days || 1) > 1 ? `Prossimi ${r.horizon_days} giorni (${r.analysis_date.slice(8, 10)}/${r.analysis_date.slice(5, 7)}–${r.date_to.slice(8, 10)}/${r.date_to.slice(5, 7)})` : `Analisi del ${r.analysis_date}`;
-  $("#meta").textContent = `${period} · aggiornata alle ${r.generated_at_local.slice(11)}${r.run_type === "refresh" ? " · aggiornamento" : ""}`;
+  $("#meta").textContent = `${focus}${period} · aggiornata alle ${r.generated_at_local.slice(11)}${r.run_type === "refresh" ? " · aggiornamento" : ""}`;
   renderToday(r); renderAccas(r); renderMatches(r); renderAgents(r); renderHistory(state.history);
 }
 

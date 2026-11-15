@@ -18,13 +18,17 @@ on:
       modo:
         description: "analisi = partite di oggi (8 crediti) · settimana = prossimi giorni (24 crediti) · pagina = ripubblica senza crediti"
         type: choice
-        options: [analisi, settimana, pagina]
+        options: [analisi, settimana, focus, pagina]
         default: analisi
       giorni:
         description: "solo per 'settimana': quanti giorni analizzare da oggi (molti bookmaker aprono il palinsesto ~3 giorni prima)"
         type: choice
         options: ["3", "5", "7"]
         default: "3"
+      competizione:
+        description: "solo per 'focus': testo della competizione da analizzare (es. Nations League, Serie A)"
+        type: string
+        default: "Nations League"
 
 permissions:
   contents: write   # salva storico e ultime analisi nel branch "data"
@@ -49,6 +53,7 @@ jobs:
       ODDS_API_MAX_CREDITS_PER_RUN: "8"
       MODO: ${{ github.event.inputs.modo }}
       GIORNI: ${{ github.event.inputs.giorni || '3' }}
+      COMPETIZIONE: ${{ github.event.inputs.competizione || 'Nations League' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -61,11 +66,12 @@ jobs:
 
       - name: Recupera storico e ultime analisi
         run: |
-          mkdir -p data week
+          mkdir -p data week focus
           if git fetch --depth 1 origin data 2>/dev/null; then
             git show FETCH_HEAD:history.json > data/history.json || rm -f data/history.json
             git show FETCH_HEAD:latest.json > data/latest.json || rm -f data/latest.json
             git show FETCH_HEAD:latest_week.json > week/latest.json || rm -f week/latest.json
+            git show FETCH_HEAD:latest_focus.json > focus/latest.json || rm -f focus/latest.json
           fi
 
       - name: Verifica risultati delle partite concluse
@@ -78,6 +84,9 @@ jobs:
           PIANO: ${{ github.event.schedule }}
         run: |
           if [ "$MODO" = "pagina" ]; then echo "solo pagina"
+          elif [ "$MODO" = "focus" ]; then
+            cp data/history.json focus/history.json 2>/dev/null || true
+            FBI_DATA_DIR=focus ONLY_COMPETITIONS="$COMPETIZIONE" python -m fbi run
           elif [ "$MODO" = "settimana" ]; then
             cp data/history.json week/history.json 2>/dev/null || true
             FBI_DATA_DIR=week HORIZON_DAYS=$GIORNI ODDS_API_MAX_CREDITS_PER_RUN=24 python -m fbi run
@@ -90,6 +99,9 @@ jobs:
         run: |
           mkdir -p site
           python scripts/export_mobile.py site/index.html --report data/latest.json --history data/history.json --nav oggi
+          if [ -f focus/latest.json ]; then
+            python scripts/export_mobile.py site/focus.html --report focus/latest.json --history data/history.json --nav focus
+          fi
           if [ -f week/latest.json ]; then
             python scripts/export_mobile.py site/settimana.html --report week/latest.json --history data/history.json --nav settimana
           fi
@@ -103,6 +115,7 @@ jobs:
           mkdir -p /tmp/state
           cp data/history.json data/latest.json /tmp/state/
           [ -f week/latest.json ] && cp week/latest.json /tmp/state/latest_week.json || true
+          [ -f focus/latest.json ] && cp focus/latest.json /tmp/state/latest_focus.json || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan state-tmp

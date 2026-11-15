@@ -76,6 +76,7 @@ class Settings:
     fixture_confirmation: str = "auto"
     max_matches: int = 0  # 0 = nessun limite
     horizon_days: int = 1  # 1 = solo oggi; 7 = analisi della settimana
+    only_competitions: list[str] = field(default_factory=list)  # filtro "focus" (testo contenuto nel nome competizione)
 
     # --- soglie di qualità (Quality Control) ---
     min_selection_score: float = 60.0
@@ -162,6 +163,7 @@ def get_settings(load_env_file: bool = True) -> Settings:
         fixture_confirmation=_s("FIXTURE_CONFIRMATION", "auto").lower(),
         max_matches=_i("MAX_MATCHES", 0),
         horizon_days=max(1, min(14, _i("HORIZON_DAYS", 1))),
+        only_competitions=[x.strip().lower() for x in _s("ONLY_COMPETITIONS").split(",") if x.strip()],
         min_selection_score=_f("MIN_SELECTION_SCORE", 60.0),
         min_ev=_f("MIN_EV", 0.0),
         min_leg_odds=_f("MIN_LEG_ODDS", 1.20),

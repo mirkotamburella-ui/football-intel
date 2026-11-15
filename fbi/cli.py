@@ -87,6 +87,8 @@ def cmd_run(args, refresh=False):
     s = get_settings()
     if args.max_matches is not None:
         s.max_matches = args.max_matches
+    if getattr(args, "only", None):
+        s.only_competitions = [x.strip().lower() for x in args.only.split(",") if x.strip()]
     if getattr(args, "days", None):
         s.horizon_days = max(1, min(14, args.days))
     setup_logging(s, args.verbose)
@@ -170,6 +172,7 @@ def main(argv=None) -> int:
         p.add_argument("--max-matches", type=int, default=None, help="limita il numero di partite (test rapidi)")
         p.add_argument("--offline", action="store_true", help="usa solo la cache locale (nessuna richiesta di rete)")
         p.add_argument("--days", type=int, default=None, help="giorni da analizzare a partire da oggi (es. 7 = settimana)")
+        p.add_argument("--only", default=None, help="analisi focus: solo competizioni che contengono questo testo (es. 'Nations League')")
     p = sub.add_parser("verify")
     p.add_argument("--days", nargs="*", default=None)
     p = sub.add_parser("serve")

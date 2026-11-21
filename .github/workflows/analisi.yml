@@ -83,7 +83,7 @@ jobs:
           if [ "$MODO" = "pagina" ]; then echo "solo pagina"
           elif [ "$MODO" = "focus" ]; then
             cp data/history.json focus/history.json 2>/dev/null || true
-            FBI_DATA_DIR=focus ONLY_COMPETITIONS="$COMPETIZIONE" python -m fbi run
+            FBI_DATA_DIR=focus ONLY_COMPETITIONS="$COMPETIZIONE" HORIZON_DAYS=2 python -m fbi run
           elif [ "$MODO" = "settimana" ]; then
             cp data/history.json week/history.json 2>/dev/null || true
             FBI_DATA_DIR=week HORIZON_DAYS=$GIORNI ODDS_API_MAX_CREDITS_PER_RUN=24 python -m fbi run

@@ -7,6 +7,10 @@ from ..leagues import TIER_RELIABILITY, tier
 from ..providers.espn import parse_dt
 from .base import Agent
 
+# Oltre questa divergenza (punti percentuali) tra modello e mercato senza margine, la selezione è esclusa:
+# un modello basato sui gol non vede formazioni, infortuni e notizie che il mercato già incorpora.
+MAX_EDGE_PP = 15.0
+
 DQ_WEIGHTS = {
     "standings": 0.15, "sample_size": 0.25, "odds_books": 0.15, "odds_fresh": 0.10,
     "models": 0.15, "h2h": 0.05, "lineups_injuries": 0.10, "xg": 0.05,
@@ -111,6 +115,8 @@ class RiskManager(Agent):
                     reasons.append("quota > 3.50: varianza troppo alta per una multipla")
                 if c["key"] == "1X2|DRAW":
                     reasons.append("pareggio secco: mercato ad alta varianza, non usato nelle multiple")
+                if abs(c.get("edge_pp", 0)) > MAX_EDGE_PP:
+                    reasons.append(f"modello e mercato divergono di {c['edge_pp']:+.0f} punti (> {MAX_EDGE_PP:.0f}): più probabile un errore del modello che un vero vantaggio")
                 if m8.get("model_disagreement_sd", 0) > 0.08:
                     reasons.append("modelli statistici in forte disaccordo")
                 level = 0 if p >= 0.70 else 1 if p >= 0.55 else 2

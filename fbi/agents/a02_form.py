@@ -47,7 +47,8 @@ def team_form(ctx, fx, side, agent) -> dict:
     if table and league:
         opp_ppg = [table[g["opponent_id"]]["pts"] / table[g["opponent_id"]]["gp"]
                    for g in league[-10:] if g["opponent_id"] in table and table[g["opponent_id"]]["gp"]]
-        league_ppg = mean(r["pts"] / r["gp"] for r in table.values() if r["gp"]) if table else None
+        ppgs = [r["pts"] / r["gp"] for r in table.values() if r["gp"]]
+        league_ppg = mean(ppgs) if ppgs else None  # campionato appena iniziato: nessuna partita giocata
         if opp_ppg and league_ppg:
             out["opponents_avg_ppg_last10"] = round(mean(opp_ppg), 2)
             out["league_avg_ppg"] = round(league_ppg, 2)

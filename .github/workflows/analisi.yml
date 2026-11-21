@@ -1,18 +1,16 @@
 # Analisi automatica + pubblicazione della dashboard su GitHub Pages.
 # Gira sui server di GitHub (gratis), senza computer acceso e senza usare Claude.
 #
-# Budget The Odds API (piano gratuito: 500 crediti/mese): 2 analisi al giorno da max 8 crediti
-# (~480/mese). L'analisi "settimana" (avvio manuale) usa max 24 crediti: un campionato costa uguale
-# per 1 o 7 giorni. Orari in UTC; con l'ora solare italiana (UTC+1):
-#   08:30 analisi completa · 17:30 aggiornamento prima delle partite serali · 23:45 verifica risultati
-# (con l'ora legale scattano un'ora più tardi; GitHub può ritardarli di qualche minuto).
+# Budget The Odds API (piano gratuito: 500 crediti/mese): 1 analisi completa al mattino (oggi + domani)
+# e 1 aggiornamento pomeridiano, max 8 crediti ciascuno (~480/mese). Un campionato costa uguale per 1 o
+# più giorni. Gli altri giri orari fanno solo la verifica dei risultati, senza crediti.
 name: Analisi automatica
 
 on:
   schedule:
-    - cron: "30 7 * * *"
-    - cron: "30 16 * * *"
-    - cron: "45 22 * * *"
+    # un giro ogni ora: lo script scripts/schedule_decide.py decide se analizzare, aggiornare o solo
+    # verificare. Così i ritardi di GitHub (anche di ore) non fanno saltare l'analisi del mattino.
+    - cron: "17 * * * *"
   workflow_dispatch:      # pulsante "Run workflow" per lanciarla a mano
     inputs:
       modo:
@@ -70,6 +68,7 @@ jobs:
           if git fetch --depth 1 origin data 2>/dev/null; then
             git show FETCH_HEAD:history.json > data/history.json || rm -f data/history.json
             git show FETCH_HEAD:latest.json > data/latest.json || rm -f data/latest.json
+            git show FETCH_HEAD:state.json > data/state.json || rm -f data/state.json
             git show FETCH_HEAD:latest_week.json > week/latest.json || rm -f week/latest.json
             git show FETCH_HEAD:latest_focus.json > focus/latest.json || rm -f focus/latest.json
           fi
@@ -78,11 +77,9 @@ jobs:
         run: python -m fbi verify || echo "verifica non completata (riprova al prossimo giro)"
 
       - name: Analisi (12 agenti)
-        # il tipo di giro dipende dall'ORARIO PROGRAMMATO (github.event.schedule), non dall'ora reale:
-        # GitHub può avviare i giri programmati con ore di ritardo
-        env:
-          PIANO: ${{ github.event.schedule }}
         run: |
+          AZIONE=$(python scripts/schedule_decide.py data)
+          echo "giro: modo=${MODO:-automatico} azione=$AZIONE"
           if [ "$MODO" = "pagina" ]; then echo "solo pagina"
           elif [ "$MODO" = "focus" ]; then
             cp data/history.json focus/history.json 2>/dev/null || true
@@ -91,9 +88,12 @@ jobs:
             cp data/history.json week/history.json 2>/dev/null || true
             FBI_DATA_DIR=week HORIZON_DAYS=$GIORNI ODDS_API_MAX_CREDITS_PER_RUN=24 python -m fbi run
             cp week/history.json data/history.json
-          elif [ "$PIANO" = "45 22 * * *" ] && [ -f data/latest.json ]; then echo "solo verifica (nessun credito)"
-          elif [ "$PIANO" = "30 16 * * *" ] && [ -f data/latest.json ]; then python -m fbi refresh
-          else python -m fbi run; fi
+          elif [ "$MODO" = "analisi" ] || [ "$AZIONE" = "run" ]; then
+            HORIZON_DAYS=2 python -m fbi run
+          elif [ "$AZIONE" = "refresh" ]; then
+            HORIZON_DAYS=2 python -m fbi refresh
+            echo "{\"refresh\": \"$(TZ=Europe/Rome date +%F)\"}" > data/state.json
+          else echo "nessuna nuova analisi (azione: $AZIONE)"; fi
 
       - name: Crea le pagine
         run: |
@@ -114,6 +114,7 @@ jobs:
         run: |
           mkdir -p /tmp/state
           cp data/history.json data/latest.json /tmp/state/
+          [ -f data/state.json ] && cp data/state.json /tmp/state/ || true
           [ -f week/latest.json ] && cp week/latest.json /tmp/state/latest_week.json || true
           [ -f focus/latest.json ] && cp focus/latest.json /tmp/state/latest_focus.json || true
           git config user.name "github-actions[bot]"

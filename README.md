@@ -205,14 +205,15 @@ verifica dei risultati (passo 9). In alternativa `python -m fbi daemon --at 08:3
 
 ## Aggiornamento automatico gratuito (GitHub Actions + GitHub Pages)
 
-`.github/workflows/analisi.yml` esegue tutto sui server di GitHub, senza computer acceso e senza usare Claude:
-alle 08:30 analisi completa, alle 17:30 aggiornamento prima delle partite serali, alle 23:45 verifica dei
-risultati (ora solare italiana; con l'ora legale un'ora dopo). Ogni giro salva storico e ultima analisi nel
-branch `data` (un solo commit, sovrascritto) e pubblica la dashboard su `https://<utente>.github.io/football-intel/`.
+`.github/workflows/analisi.yml` gira **ogni ora** sui server di GitHub (gratis per i repository pubblici), senza
+computer acceso e senza usare Claude. GitHub può ritardare i giri programmati anche di ore, quindi a ogni giro
+`scripts/schedule_decide.py` decide cosa serve in base all'ora italiana: dalle 7 in poi, se manca, l'**analisi
+completa di oggi e domani**; tra le 14 e le 20 un **aggiornamento** di quote e formazioni (una volta al giorno);
+negli altri giri solo la **verifica dei risultati**. Storico, ultima analisi e stato sono salvati nel branch `data`
+e la dashboard è pubblicata su `https://<utente>.github.io/football-intel/`.
 
-Budget The Odds API: il piano gratuito ha 500 crediti/mese; il workflow usa al massimo 8 crediti per analisi
-(4 campionati, scelti per importanza e numero di partite) × 2 analisi al giorno ≈ 480/mese. La verifica serale
-non consuma crediti. Con un piano a pagamento basta alzare `ODDS_API_MAX_CREDITS_PER_RUN` nel workflow.
+Budget The Odds API: il piano gratuito ha 500 crediti/mese; analisi e aggiornamento usano al massimo 8 crediti
+ciascuno (un campionato costa uguale per 1 o 2 giorni) ≈ 480/mese. Le verifiche non consumano crediti.
 
 Attivazione (una volta sola):
 1. Sul piano GitHub gratuito Pages richiede un repository **pubblico** (Settings → General → Change visibility).

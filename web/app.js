@@ -91,7 +91,7 @@ function renderToday(r) {
   $("#tab-today").innerHTML = `
     <div class="kpis">
       <div class="kpi"><div class="v">${r.matches_analyzed}</div><div class="l">partite analizzate (pre-match)</div></div>
-      <div class="kpi"><div class="v">${r.matches_found}</div><div class="l">partite trovate ${(r.horizon_days || 1) > 1 ? `nei prossimi ${r.horizon_days} giorni` : "oggi"}</div></div>
+      <div class="kpi"><div class="v">${r.matches_found}</div><div class="l">partite trovate ${(r.horizon_days || 1) === 2 ? "oggi e domani" : (r.horizon_days || 1) > 1 ? `nei prossimi ${r.horizon_days} giorni` : "oggi"}</div></div>
       <div class="kpi"><div class="v">${r.competitions_monitored.length}</div><div class="l">competizioni</div></div>
       <div class="kpi"><div class="v">${r.agents_active}/${r.agents_total}</div><div class="l">agenti attivi</div></div>
     </div>
@@ -291,7 +291,7 @@ function renderHistory(h) {
 function renderAll() {
   const r = state.report;
   const focus = (r.focus || []).length ? `Focus ${r.focus.join(", ")} · ` : "";
-  const period = (r.horizon_days || 1) > 1 ? `Prossimi ${r.horizon_days} giorni (${r.analysis_date.slice(8, 10)}/${r.analysis_date.slice(5, 7)}–${r.date_to.slice(8, 10)}/${r.date_to.slice(5, 7)})` : `Analisi del ${r.analysis_date}`;
+  const period = (r.horizon_days || 1) === 2 ? `Oggi e domani (${r.analysis_date.slice(8, 10)}/${r.analysis_date.slice(5, 7)}–${r.date_to.slice(8, 10)}/${r.date_to.slice(5, 7)})` : (r.horizon_days || 1) > 1 ? `Prossimi ${r.horizon_days} giorni (${r.analysis_date.slice(8, 10)}/${r.analysis_date.slice(5, 7)}–${r.date_to.slice(8, 10)}/${r.date_to.slice(5, 7)})` : `Analisi del ${r.analysis_date}`;
   $("#meta").textContent = `${focus}${period} · aggiornata alle ${r.generated_at_local.slice(11)}${r.run_type === "refresh" ? " · aggiornamento" : ""}`;
   renderToday(r); renderAccas(r); renderMatches(r); renderAgents(r); renderHistory(state.history);
 }
